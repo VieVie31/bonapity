@@ -1,0 +1,39 @@
+<html>
+    <head>
+        <title>Add 2 int</title>
+        <script src='https://code.jquery.com/jquery-2.x-git.min.js'></script>
+    </head>
+    <body>
+        <h1>ADD two INT</h1>
+
+        <input id="n1" type="text" placeholder="first number..."/>
+        <input id="n2" type="text" placeholder="second number..."/>
+        <button onclick="api_add()">ADD</button>
+
+        <div id="parent-addition-result" style="display: None">
+            Result : <span id="addition-result">NO DATA</span>
+        </div>
+
+        <script>
+            function api_add() {
+                $.ajax({
+                    url: "http://localhost:8888/add",
+                    type: 'GET',
+                    dataType: "json",
+                    data: {
+                        a: document.getElementById("n1").value,
+                        b: document.getElementById("n2").value
+                    },
+                    error: function (request, status, error) {
+                        console.log("coucou")
+                        alert(request.responseText);
+                    },
+                    success: function (data) { 
+                        document.getElementById("addition-result").innerText = data;
+                        document.getElementById("parent-addition-result").style["display"] = "block";
+                    }
+                });
+            }
+        </script>
+    </body>
+</html>
