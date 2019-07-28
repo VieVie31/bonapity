@@ -7,6 +7,8 @@ and it's even simpler than Flask !
 You are the 👨‍🍳, just do what you do the best : cook code !
 don't loose your time to 💁, we do it for you... :)
 
+By type hinting your code we cast the received inputs to the right type ! so don't worry about it... 😀
+
 ## Install
 
 Install it with `pip3 install bonapity` and take a look to `examples/` !
@@ -14,7 +16,7 @@ Install it with `pip3 install bonapity` and take a look to `examples/` !
 ## Current support
 
 Send your data via GET and receive results in JSON.
-We accept basic python data types : 
+We accept basic python data types such as : 
 
  - int
  - float
