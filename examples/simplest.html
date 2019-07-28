@@ -29,7 +29,8 @@
                         b: document.getElementById("n2").value
                     },
                     error: function (request, status, error) {
-                        console.log("coucou")
+                        console.log(status);
+                        console.log(error);
                         alert(request.responseText);
                     },
                     success: function (data) { 
