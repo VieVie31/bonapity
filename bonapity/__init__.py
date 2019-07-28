@@ -65,12 +65,14 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
 
                 self.send_response(200)
                 self.send_header('Content-type','text/html')
+                self.send_header('Access-Control-Allow-Origin', '*')
                 self.end_headers()
                 self.wfile.write(html_out.encode())
                 return
             elif not self.help and parsed_url.path == '/':
                 self.send_response(404)
                 self.send_header('Content-type','text/html')
+                self.send_header('Access-Control-Allow-Origin', '*')
                 self.end_headers()
                 self.wfile.write(b'')
                 return
@@ -78,6 +80,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             if not fname in __decorated.keys():
                 self.send_response(404)
                 self.send_header('Content-type','text/html')
+                self.send_header('Access-Control-Allow-Origin', '*')
                 self.end_headers()
                 self.wfile.write(f"{fname} : this function do not exists...".encode())
                 return
@@ -95,6 +98,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             """
             self.send_response(200)
             self.send_header('Content-type','text/html')
+            self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             self.wfile.write(html_out.encode())
             return
@@ -103,6 +107,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         if not parsed_url.path in __decorated.keys():
             self.send_response(404)
             self.send_header('Content-type','text/html')
+            self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             self.wfile.write(f"{parsed_url.path} : this function do not exists...".encode())
             return
@@ -123,6 +128,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
           != sorted(set(parameters.keys()) - set(default_params_names)):
             self.send_response(400)
             self.send_header('Content-type','text/html')
+            self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             self.wfile.write(b"Parameters names do not match the signature of the function...")
             return
@@ -132,6 +138,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             if len(param_value) != 1:
                 self.send_response(500)
                 self.send_header('Content-type','application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
                 self.end_headers()
                 self.wfile.write(b"Each argument can be used only once !")
                 return
@@ -162,6 +169,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                 if not evaluated:
                     self.send_response(500)
                     self.send_header('Content-type','application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
                     self.end_headers()
                     self.wfile.write(f"Parameter {param_key} : {param_value} poorly formated...".encode())
                     return
@@ -190,6 +198,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                         except Exception as e:
                             self.send_response(500)
                             self.send_header('Content-type','application/json')
+                            self.send_header('Access-Control-Allow-Origin', '*')
                             self.end_headers()
                             self.wfile.write(f"Error on parameter `{param_key}` : {e}".encode())
                             return
@@ -208,6 +217,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             except Exception as e:
                 self.send_response(500)
                 self.send_header('Content-type','application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
                 self.end_headers()
                 self.wfile.write(f"TypeError on {fun.__name__} : {e}".encode())
                 return
@@ -216,6 +226,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         except Exception as e:
             self.send_response(500)
             self.send_header('Content-type','application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             self.wfile.write(str(e).encode())
             return
@@ -223,6 +234,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         # Send success
         self.send_response(200)
         self.send_header('Content-type','application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
         
         self.wfile.write(
@@ -233,6 +245,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
     def do_POST(self):
         self.send_response(500)
         self.send_header('Content-type','text/html')
+        self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
         self.wfile.write(b"NOT IMPLEMENTED !")
         return
