@@ -1,4 +1,4 @@
-# 👀 BONAPITY README 👀
+# 👀 README 👀
 
 `bonAPIty` is a python3 package allowing you to create simple API (GET) 
 for your functions without writting any complicated line of server code
