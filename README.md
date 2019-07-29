@@ -44,6 +44,9 @@ if __name__ == "__main__":
 
 ## In Development
 
+> "I'll probably will do it, maybe definitely"
+
+- `GET` api will return serialized pickle object if return type is not JSON serialisable
 - `POST` api allowing you to pass non generic python types such as `numpy.ndarrays`
 
 
