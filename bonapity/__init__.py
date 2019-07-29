@@ -14,6 +14,8 @@ import json
 import http.server
 import urllib.parse
 
+import pickle
+
 from types import MethodType
 from collections import defaultdict, OrderedDict
 
@@ -127,9 +129,6 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                  k == full_arg_spec.varargs or k == full_arg_spec.varkw,
             sig.parameters.keys()
         ))
-        print(ignored_params_names)
-        print(set(sig.parameters.keys()) - set(ignored_params_names))
-        print(set(parameters.keys()) - set(ignored_params_names))
         
         if sorted(set(sig.parameters.keys()) - set(ignored_params_names)) \
           != sorted(set(parameters.keys()) - set(ignored_params_names)):
@@ -230,38 +229,51 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             if full_arg_spec.varkw != None and len(full_arg_spec.varkw):
                 f = functools.partial(f, **parameters[full_arg_spec.varkw])
            
-            res = f() #fun(**parameters)
+            res = f()
             
             # Ecode result in JSON
             try:
                 res = json.dumps(res)
+
+                # Send success
+                self.send_response(200)
+                self.send_header('Content-type','application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                
+                self.wfile.write(
+                    f"{res}".encode()
+                )
+                return
             except Exception as e:
+                # Encore into pickle and send a binary object
+                try:
+                    res = pickle.dumps(res)
+                    
+                    # Send success
+                    self.send_response(200)
+                    self.send_header('Content-type','application/octet-stream')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    
+                    self.wfile.write(res)
+                    return
+                except Exception as nested_e:
+                    e = nested_e
                 self.send_response(500)
                 self.send_header('Content-type','application/json')
                 self.send_header('Access-Control-Allow-Origin', '*')
                 self.end_headers()
-                self.wfile.write(f"TypeError on {fun.__name__} : {e}".encode())
+                self.wfile.write(f"TypeError on {fun.__name__} : {e}, result is not serializable (JSON nor pickle)... :'(".encode())
                 return
-            
-            #TODO: if not json serializable return as binary pickled object ?
+
         except Exception as e:
             self.send_response(500)
             self.send_header('Content-type','application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-            self.wfile.write(str(e).encode())
+            self.wfile.write(f"Error in {fun.__name__} : {str(e)}".encode())
             return
-
-        # Send success
-        self.send_response(200)
-        self.send_header('Content-type','application/json')
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.end_headers()
-        
-        self.wfile.write(
-            f"{res}".encode()
-        )
-        return
 
     def do_POST(self):
         self.send_response(500)
