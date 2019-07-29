@@ -14,6 +14,7 @@ import html
 import json
 import http.server
 import urllib.parse
+import urllib.request
 
 import base64
 import pickle
@@ -25,7 +26,7 @@ __version__ = "0.1.4"
 __version_info__ = (0, 1, 4)
 __author__ = "Olivier RISSER-MAROIX (VieVie31)"
 
-__all__ = ["bonapity"]
+__all__ = ["bonapity", "vuosi"]
 
 __decorated = {}
 
@@ -448,6 +449,50 @@ def bonapity(fun=None, name: str=None):
         return fun(*args, **kwargs)
     return f
 
+def vuosi(domain: str, port: int):
+    """
+    Decorator for python clients to simplify the requests data transfert
+    and using the API like a bunch of blackbox functions...
+
+    The decored function name should be a command of the api.
+    Example:
+    ```
+    >>> @vuosi('localhost', 8888) # Specify the domain and the port
+    >>> def myfun(a):
+    ...     # Can create this function only if `/myfun?a=...` exists in the api
+    ...     pass # No body needed, the decorator will write/execute is for you 
+    
+    >>> myfun('coucou cici')
+    ```
+    """
+    def inner_vuosi(fun):
+        sig = inspect.signature(fun)
+        def fetch(**params):
+            """
+            All arguments are keyword arguments...
+            For example do not write f(3) but f(x=3)...
+            """
+            params = pickle.dumps(params)
+            
+            r =  urllib.request.urlopen(urllib.request.Request(
+                f'http://{domain}:{port}/{fun.__name__}', 
+                data=params, 
+                headers={"Content-Type": "application/python-pickle"
+            }))
+
+            if r.status != 200:
+                raise Exception(
+                    f"Failed to fetch result, code : [{r.status}], message : {r.read()}"
+                )
+            res = r.read()
+            try:
+                res = pickle.loads(res)
+            except:
+                res = json.loads(res.decode())
+            return res
+        fetch.__name__ == fun.__name__
+        return fetch
+    return inner_vuosi
 
 bonapity.serve = MethodType(serve, bonapity)
 
