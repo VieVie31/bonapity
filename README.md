@@ -52,8 +52,11 @@ Recommanded order for reading :
 
 > "I'll probably will do it, maybe definitely"
 
-- `GET` api will return serialized pickle object if return type is not JSON serialisable
-- `POST` api allowing you to pass non generic python types such as `numpy.ndarrays`
+- [x] `POST` suppport
+- [x] returning serialized pickle dump if return type is not JSON serializable
+- [ ] allow to pass non generic python types such as `numpy.ndarrays` as parameter
+- [ ] add automatic wapper code generation to include in doc (will make usage by clients even much simpler)
+- [ ] make the server multithreaded to be non blocking (non sequential, request after request)
 
 
 ## License [CC-BY](https://creativecommons.org/licenses/by/4.0/)
