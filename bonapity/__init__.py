@@ -15,6 +15,7 @@ import json
 import http.server
 import urllib.parse
 
+import base64
 import pickle
 
 from types import MethodType
@@ -177,7 +178,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                     
                     # Send success
                     self.send_response(200)
-                    self.send_header('Content-type','application/octet-stream')
+                    self.send_header('Content-type','application/python-pickle')
                     self.send_header('Access-Control-Allow-Origin', '*')
                     self.end_headers()
                     
