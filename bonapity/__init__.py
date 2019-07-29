@@ -34,7 +34,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         super(BonAppServer, self).__init__(*args, **kargs)
         self.help = True
 
-    def process(self, parameters):
+    def process(self, parameters, value_already_evaluated=False):
         """
         This method do the common stuffs between do_GET and do_POST.
 
@@ -82,11 +82,13 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
 
             if ftype != str:
                 # Try to evaluate
-                evaluated = False
+                evaluated = value_already_evaluated
+
                 try:
                     # Evaluate as Python formated text
-                    param_value = ast.literal_eval(param_value)
-                    evaluated = True
+                    if not evaluated:
+                        param_value = ast.literal_eval(param_value)
+                        evaluated = True
                 except:
                     pass
                 
@@ -104,7 +106,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                     self.send_header('Content-type','application/json')
                     self.send_header('Access-Control-Allow-Origin', '*')
                     self.end_headers()
-                    self.wfile.write(f"Parameter {param_key} : {param_value} poorly formated...".encode())
+                    self.wfile.write(f"Parameter {param_key} : {param_value} {type(param_value)} poorly formated...".encode())
                     return
 
                 # Try to cast
@@ -143,6 +145,10 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                 # ftype was str
                 parameters[param_key] = str(param_value)
 
+        # Add the missing default parameters if not filled
+        for k in sig.parameters.keys():
+            if not k in parameters:
+                parameters[k] = sig.parameters[k].default
 
         # Execute the function or die
         try:
@@ -159,9 +165,9 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             # Fill the **kargs if any
             if full_arg_spec.varkw != None and len(full_arg_spec.varkw):
                 f = functools.partial(f, **parameters[full_arg_spec.varkw])
-           
+
             res = f()
-            
+
             # Ecode result in JSON
             try:
                 res = json.dumps(res)
@@ -293,16 +299,48 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(f"{parsed_url.path} : this function do not exists...".encode())
             return
+        
+        # Will be replaced by True id data loaded from pickle
+        value_already_evaluated = False
 
-        #TODO: check if unique parameter without value
-        #  ==> process as base64 pickled object : decode parameters from it
+        urlargs = parsed_url.query.split('&')
+        if len(urlargs) == 1 and urlargs[0].endswith('=' * urlargs[0].count('=')):
+            # Only an argument without value ?  `?Ym9uYXBpdHk=`
+            # this should be a base64 pickled object
+            try:
+                parameters = base64.b64decode(urlargs[0])
+                parameters = pickle.loads(parameters)
+                if type(parameters) != dict or set(map(lambda k: type(k), parameters)) != {str}:
+                    self.send_response(500)
+                    self.send_header('Content-type', 'text/html')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(
+                        b"""
+                        The encoded pickled object should be a dict (key: str, value)
+                        with the name of argument as key and the corresponding 
+                        data as value, all keys should be strings...
+                        """
+                    )
+                    return
+                # Prepare parameters to be in the same format as 
+                # if processed by url : `{"key": [value(s)], ...}`
+                parameters = {k : [parameters[k]]for k in parameters}
+                value_already_evaluated = True
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-type', 'text/html')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(str(e).encode())
+                return
+        else:
+            # Regular way to pass data : `?arg1=val1&arg2=val2[...]`
+            parameters = urllib.parse.parse_qs(
+                parsed_url.query
+            )
 
-        # Handle API
-        parameters = urllib.parse.parse_qs(
-            parsed_url.query
-        )
-
-        self.process(parameters)
+        self.process(parameters, value_already_evaluated)
         return 
         
     def do_POST(self):
