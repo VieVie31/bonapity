@@ -2,8 +2,8 @@ from setuptools import setup
 
 setup(
     name='bonapity',
-    version='0.1',
-    description='Get a simple HTTP (GET) API with only this simple decorator : `@bonapity` !',
+    version='0.1.3',
+    description='Get a simple HTTP (GET) API with only this simple decorator : @bonapity !',
     long_description="""
         # 👀 BONAPITY 👀
 

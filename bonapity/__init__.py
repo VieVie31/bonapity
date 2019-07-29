@@ -212,7 +212,11 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                         # Not a generic python type : 
                         # just affect the parsed value
                         parameters[param_key] = param_value
-        
+            else:
+                # ftype was str
+                parameters[param_key] = str(param_value)
+
+
         # Execute the function or die
         try:
             # Fill the first positional arguments in the right order
