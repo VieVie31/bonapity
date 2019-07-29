@@ -12,6 +12,11 @@ def add(a: int, b: int=0) -> int:
     """
     return a + b
 
+@bonapity
+def concatenate(s1: str, s2: str) -> str:
+    "Return the concatenation of `s1` with `s2`."
+    return s1 + s2
+
 
 @bonapity("hello")
 def g():
@@ -33,6 +38,7 @@ if __name__ == "__main__":
     - display the hello world message : http://localhost:{port}/hello
     - test the `add` function : http://localhost:{port}/add?a=1&b=3
     - look at the doc of the `add` function : http://localhost:{port}/help/add
+    - try the `concatenate` function : http://localhost:{port}/concatenate?s1=3&s2=4
 
     * Try to give only the `a` parameter (`b` is default) 
       then only `b` then an extra parameter
