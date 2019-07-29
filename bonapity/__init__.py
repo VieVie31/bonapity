@@ -344,17 +344,28 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         return 
         
     def do_POST(self):
-        form = cgi.FieldStorage(
-            fp=self.rfile, 
-            headers=self.headers,
-            environ={
-                'REQUEST_METHOD':'POST',
-                'CONTENT_TYPE': self.headers['Content-Type'],
-            }
-        )
-        #TODO: handle JSON vs pickle Content-Type
-        parameters = {k: form[k].value for k in form} #cgi.MiniFieldStorage
-        self.process(parameters)
+        content_len = int(self.headers['Content-Length'])
+        rfile = self.rfile
+        if self.headers['Content-Type'] == "application/json":
+            parameters = json.loads(rfile.read(content_len).decode())
+        elif self.headers['Content-Type'] == "application/python-pickle":
+            parameters = pickle.loads(rfile.read(content_len))
+        else:
+            self.send_response(400)
+            self.send_header('Content-type', 'text/html')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(
+                f"""Bad Content-Type : {self.headers['Content-Type']}, 
+                accepted CT are : application/json, application/python-pickle.
+                """.encode())
+            return
+        #TODO: handle application/x-www-form-urlencoded ?
+        
+        # Prepare paramters in the formats as if they was parsed from url
+        parameters = {k: [parameters[k]] for k in parameters}
+        
+        self.process(parameters, value_already_evaluated=True)
         return
 
 def serve(self, port=8888, help=True):
