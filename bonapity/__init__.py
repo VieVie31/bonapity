@@ -21,7 +21,12 @@ import pickle
 from types import MethodType
 from collections import defaultdict, OrderedDict
 
+__version__ = "0.1.4"
+__version_info__ = (0, 1, 4)
+__author__ = "Olivier RISSER-MAROIX (VieVie31)"
+
 __all__ = ["bonapity"]
+
 __decorated = {}
 
 class BonAppServer(http.server.BaseHTTPRequestHandler):
