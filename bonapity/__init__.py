@@ -15,7 +15,7 @@ import http.server
 import urllib.parse
 
 from types import MethodType
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 
 __all__ = ["bonapity"]
 __decorated = {}
@@ -119,13 +119,20 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             parsed_url.query
         )
 
-        # Check if parameters names matches (and ignore default parameters)
-        default_params_names = list(filter(
-            lambda k: sig.parameters[k].default != inspect._empty,
+        # Check if parameters names matches 
+        # (and ignore default and *args, **kargs parameters)
+        full_arg_spec = inspect.getfullargspec(fun)
+        ignored_params_names = list(filter(
+            lambda k: sig.parameters[k].default != inspect._empty or \
+                 k == full_arg_spec.varargs or k == full_arg_spec.varkw,
             sig.parameters.keys()
         ))
-        if   sorted(set(sig.parameters.keys()) - set(default_params_names)) \
-          != sorted(set(parameters.keys()) - set(default_params_names)):
+        print(ignored_params_names)
+        print(set(sig.parameters.keys()) - set(ignored_params_names))
+        print(set(parameters.keys()) - set(ignored_params_names))
+        
+        if sorted(set(sig.parameters.keys()) - set(ignored_params_names)) \
+          != sorted(set(parameters.keys()) - set(ignored_params_names)):
             self.send_response(400)
             self.send_header('Content-type','text/html')
             self.send_header('Access-Control-Allow-Origin', '*')
@@ -209,7 +216,21 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         
         # Execute the function or die
         try:
-            res = fun(**parameters)
+            # Fill the first positional arguments in the right order
+            f = functools.partial(
+                fun,
+                *[parameters[a] for a in inspect.getfullargspec(fun).args]
+            )
+
+            # Fill the *args if any
+            if full_arg_spec.varargs != None and len(full_arg_spec.varargs):
+                f = functools.partial(f, *parameters[full_arg_spec.varargs])
+
+            # Fill the **kargs if any
+            if full_arg_spec.varkw != None and len(full_arg_spec.varkw):
+                f = functools.partial(f, **parameters[full_arg_spec.varkw])
+           
+            res = f() #fun(**parameters)
             
             # Ecode result in JSON
             try:
@@ -222,7 +243,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                 self.wfile.write(f"TypeError on {fun.__name__} : {e}".encode())
                 return
             
-            #TODO: verify encoded types match (at least partialy) the signature ?
+            #TODO: if not json serializable return as binary pickled object ?
         except Exception as e:
             self.send_response(500)
             self.send_header('Content-type','application/json')
