@@ -17,14 +17,13 @@ Install it with `pip3 install bonapity` and take a look to `examples/` !
 
 Send your data via GET and receive results in JSON.
 We accept basic python data types such as : 
+`int, float, bool, list, tuple, dict, set, frozenset`
 
- - int
- - float
- - bool
- - list
- - dict
- - set
- - frozenset
+
+For each function, your API will return your computation as JSON 
+if your return type is JSON serializable or in pickle else 
+(for example numpy.ndarray are not JSON serializable and 
+will be returned as a binary pickle dump).
 
 
 ## Example
@@ -41,6 +40,13 @@ if __name__ == "__main__":
     bonapity.serve()
 ```
 
+For more examples with explanations take a look to the `examples/` dir...
+
+Recommanded order for reading : 
+
+- How to import the decorator, use it and serve : `simplest.py`
+- Having a simple web interface using your simplest.py API : `simplest.html`
+- Using your API from a python client : `np_server_api.py`, `np_client_api.py`
 
 ## In Development
 
