@@ -47,6 +47,7 @@ Recommanded order for reading :
 - How to import the decorator, use it and serve : `simplest.py`
 - Having a simple web interface using your simplest.py API : `simplest.html`
 - Using your API from a python client : `np_server_api.py`, `np_client_api.py`
+- Send/receive complex non python generic data types (such as np.ndarrays) with a python client : `python_server.py`, `python_client.py`
 
 ## In Development
 
@@ -54,7 +55,7 @@ Recommanded order for reading :
 
 - [x] `POST` suppport
 - [x] returning serialized pickle dump if return type is not JSON serializable
-- [ ] allow to pass non generic python types such as `numpy.ndarrays` as parameter
+- [x] allow to pass non generic python types such as `numpy.ndarrays` as parameter
 - [ ] add automatic wapper code generation to include in doc (will make usage by clients even much simpler)
 - [ ] make the server multithreaded to be non blocking (non sequential, request after request)
 
