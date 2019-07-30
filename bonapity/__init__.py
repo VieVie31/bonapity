@@ -23,7 +23,7 @@ from typing import List
 from types import MethodType
 from collections import defaultdict, OrderedDict
 
-__version__ = "0.1.4"
+__version__ = "0.1.6"
 __version_info__ = (0, 1, 4)
 __author__ = "Olivier RISSER-MAROIX (VieVie31)"
 
@@ -31,6 +31,7 @@ __all__ = ["bonapity", "vuosi"]
 
 __decorated = {}
 
+#FIXME: cross origin
 def generate_js(fname: str, pnames: List[str], domain: str, port: int) -> str:
     fname = fname[1:] #remove the starting '/' 
     return f"""
@@ -62,6 +63,23 @@ def generate_python(signature: str, doc: str, domain: str, port: int) -> str:
     @vuosi('{str(domain)}', {port})
     def {signature}:\n\tpass
     """.replace("    ", '')
+
+def send_header(server_instance, code, content_type):
+    server_instance.send_response(code)
+    server_instance.send_header('Content-type', content_type)
+    server_instance.send_header(
+        "Access-Control-Allow-Origin", 
+        'null' 
+        if server_instance.headers["Origin"] is None 
+        else server_instance.headers["Origin"]
+    )
+    server_instance.send_header(
+        'Access-Control-Allow-Methods', 
+        'GET, POST, PUT, DELETE, PATCH, OPTIONS' #*?
+    )
+    server_instance.send_header("Access-Control-Allow-Credentials", 'true')
+    server_instance.end_headers()
+
 
 class BonAppServer(http.server.BaseHTTPRequestHandler):
     def __init__(self, *args, **kargs):
@@ -98,10 +116,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         
         if sorted(set(sig.parameters.keys()) - set(ignored_params_names)) \
           != sorted(set(parameters.keys()) - set(ignored_params_names)):
-            self.send_response(400)
-            self.send_header('Content-type','text/html')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
+            send_header(self, 400, 'text/html')
             self.wfile.write(b"Parameters names do not match the signature of the function...")
             return
 
@@ -109,10 +124,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         for param_key, param_value in parameters.items():
             #print("param:", param_key, param_value)
             if len(param_value) != 1:
-                self.send_response(500)
-                self.send_header('Content-type','application/json')
-                self.send_header('Access-Control-Allow-Origin', '*')
-                self.end_headers()
+                send_header(self, 500, 'application/json')
                 self.wfile.write(b"Each argument can be used only once !")
                 return
             
@@ -142,10 +154,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                 
                 # Return 500 error if failed to evaluate parameter
                 if not evaluated:
-                    self.send_response(500)
-                    self.send_header('Content-type','application/json')
-                    self.send_header('Access-Control-Allow-Origin', '*')
-                    self.end_headers()
+                    send_header(self, 500, 'application/json')
                     self.wfile.write(f"Parameter {param_key} : {param_value} {type(param_value)} poorly formated...".encode())
                     return
 
@@ -171,10 +180,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                         try:
                             parameters[param_key] = type(supported_generic_types[ftype])(param_value)
                         except Exception as e:
-                            self.send_response(500)
-                            self.send_header('Content-type','application/json')
-                            self.send_header('Access-Control-Allow-Origin', '*')
-                            self.end_headers()
+                            send_header(self, 500, 'application/json')
                             self.wfile.write(f"Error on parameter `{param_key}` : {e}".encode())
                             return
                     else:
@@ -222,11 +228,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                 #print("encoded:", res)
 
                 # Send success
-                self.send_response(200)
-                self.send_header('Content-type','application/json')
-                self.send_header('Access-Control-Allow-Origin', '*')
-                self.end_headers()
-                
+                send_header(self, 200, 'application/json')
                 self.wfile.write(
                     f"{res}".encode()
                 )
@@ -237,30 +239,33 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                     res = pickle.dumps(res)
                     
                     # Send success
-                    self.send_response(200)
-                    self.send_header('Content-type','application/python-pickle')
-                    self.send_header('Access-Control-Allow-Origin', '*')
-                    self.end_headers()
-                    
+                    send_header(self, 200, 'application/python-pickle')
                     self.wfile.write(res)
                     return
                 except Exception as nested_e:
                     e = nested_e
-                self.send_response(500)
-                self.send_header('Content-type','application/json')
-                self.send_header('Access-Control-Allow-Origin', '*')
-                self.end_headers()
+                send_header(self, 500, 'application/json')
                 self.wfile.write(f"TypeError on {fun.__name__} : {e}, result is not serializable (JSON nor pickle)... :'(".encode())
                 return
 
         except Exception as e:
-            self.send_response(500)
-            self.send_header('Content-type','application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
+            send_header(self, 500, 'application/json')
             self.wfile.write(f"Error in {fun.__name__} : {str(e)}".encode())
             return
 
+    def do_OPTIONS(self):
+        # Send back informations for complex POST
+        self.send_response(200, "ok")
+        self.send_header('Access-Control-Allow-Methods', self.headers["Access-Control-Request-Method"])
+        self.send_header("Access-Control-Allow-Headers", self.headers["Access-Control-Request-Headers"])
+        self.send_header(
+            "Access-Control-Allow-Origin", 
+            'null' if self.headers["Origin"] is None 
+            else self.headers["Origin"]
+        )
+        self.send_header("Access-Control-Allow-Credentials", 'true')
+        self.end_headers()
+        # <!> : this method should not contain anything more and no return !
 
     def do_GET(self):
         __decorated = globals()["__decorated"]
@@ -300,25 +305,16 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                     </footer></div>
                 """
 
-                self.send_response(200)
-                self.send_header('Content-type','text/html')
-                self.send_header('Access-Control-Allow-Origin', '*')
-                self.end_headers()
+                send_header(self, 200, 'text/html')
                 self.wfile.write(html_out.encode())
                 return
             elif not self.help and parsed_url.path == '/':
-                self.send_response(404)
-                self.send_header('Content-type','text/html')
-                self.send_header('Access-Control-Allow-Origin', '*')
-                self.end_headers()
+                send_header(self, 404, 'text/html')
                 self.wfile.write(b'')
                 return
 
             if not fname in __decorated.keys():
-                self.send_response(404)
-                self.send_header('Content-type','text/html')
-                self.send_header('Access-Control-Allow-Origin', '*')
-                self.end_headers()
+                send_header(self, 404, 'text/html')
                 self.wfile.write(f"{fname} : this function do not exists...".encode())
                 return
             fun = __decorated[fname]
@@ -352,19 +348,13 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                 ★ <a href='https://github.com/VieVie31/bonapity'>bonAPIty</a> ★
                 </footer></div>
             """
-            self.send_response(200)
-            self.send_header('Content-type','text/html')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
+            send_header(self, 200, 'text/html')
             self.wfile.write(html_out.encode())
             return
         
         #Check if the function the user want to call exists
         if not parsed_url.path in __decorated.keys():
-            self.send_response(404)
-            self.send_header('Content-type','text/html')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
+            send_header(self, 404, 'text/html')
             self.wfile.write(f"{parsed_url.path} : this function do not exists...".encode())
             return
         
@@ -379,10 +369,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                 parameters = base64.b64decode(urlargs[0])
                 parameters = pickle.loads(parameters)
                 if type(parameters) != dict or set(map(lambda k: type(k), parameters)) != {str}:
-                    self.send_response(500)
-                    self.send_header('Content-type', 'text/html')
-                    self.send_header('Access-Control-Allow-Origin', '*')
-                    self.end_headers()
+                    send_header(self, 500, 'text/html')
                     self.wfile.write(
                         b"""
                         The encoded pickled object should be a dict (key: str, value)
@@ -396,10 +383,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                 parameters = {k : [parameters[k]]for k in parameters}
                 value_already_evaluated = True
             except Exception as e:
-                self.send_response(500)
-                self.send_header('Content-type', 'text/html')
-                self.send_header('Access-Control-Allow-Origin', '*')
-                self.end_headers()
+                send_header(self, 500, 'text/html')
                 self.wfile.write(str(e).encode())
                 return
         else:
@@ -421,10 +405,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         elif self.headers['Content-Type'] == "application/python-pickle":
             parameters = pickle.loads(rfile.read(content_len))
         else:
-            self.send_response(400)
-            self.send_header('Content-type', 'text/html')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
+            send_header(self, 400, 'text/html')
             self.wfile.write(
                 f"""Bad Content-Type : {self.headers['Content-Type']}, 
                 accepted CT are : application/json, application/python-pickle.
