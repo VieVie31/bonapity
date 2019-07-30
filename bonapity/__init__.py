@@ -23,7 +23,7 @@ from typing import List
 from types import MethodType
 from collections import defaultdict, OrderedDict
 
-__version__ = "0.1.6"
+__version__ = "0.1.7"
 __version_info__ = (0, 1, 4)
 __author__ = "Olivier RISSER-MAROIX (VieVie31)"
 
@@ -31,7 +31,7 @@ __all__ = ["bonapity", "vuosi"]
 
 __decorated = {}
 
-#FIXME: cross origin
+
 def generate_js(fname: str, pnames: List[str], domain: str, port: int) -> str:
     fname = fname[1:] #remove the starting '/' 
     return f"""
