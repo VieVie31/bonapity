@@ -56,7 +56,8 @@ Recommanded order for reading :
 - [x] `POST` suppport
 - [x] returning serialized pickle dump if return type is not JSON serializable
 - [x] allow to pass non generic python types such as `numpy.ndarrays` as parameter
-- [ ] add automatic wapper code generation to include in doc (will make usage by clients even much simpler)
+- [x] add automatic wapper code generation to include in doc (will make usage by clients even much simpler) (TODO: make a better python version not converting the args into kargs)
+- [ ] Handle the others commands of the REST API standard : `PUT`, `DELETE`, `PATCH`
 - [ ] make the server multithreaded to be non blocking (non sequential, request after request)
 
 
