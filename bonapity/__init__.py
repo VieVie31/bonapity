@@ -33,28 +33,35 @@ __decorated = {}
 
 def generate_js(fname: str, pnames: List[str], domain: str, port: int) -> str:
     fname = fname[1:] #remove the starting '/' 
-    return f"""async function {fname}({', '.join(pnames)}) {{
-        keys = [{', '.join(map(lambda x: f'"{x}"', pnames))}];
-        if (arguments.length > keys.length)
-            throw new Exception('Too many arguments...');
-        params = {{}};
-        for (var i = 0; i < arguments.length; i++)
-            params[keys[i]] = arguments[i];
-        params = JSON.stringify(params);
-        url = 'http://{domain}:{port}/{fname}';
-        const r = await fetch(url, {{
-            method: 'POST',
-            headers: {{
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }},
-            body: params
-        }});
-        return await r.json();
-    }}"""
+    return f"""
+    async function {fname}({', '.join(pnames)}) {{
+    \tkeys = [{', '.join(map(lambda x: f'"{x}"', pnames))}];
+    \tif (arguments.length > keys.length)
+    \t\tthrow new Exception('Too many arguments...');
+    \tparams = {{}};
+    \tfor (var i = 0; i < arguments.length; i++)
+    \t\tparams[keys[i]] = arguments[i];
+    \tparams = JSON.stringify(params);
+    \turl = 'http://{domain}:{port}/{fname}';
+    \tconst r = await fetch(url, {{
+    \t\tmethod: 'POST',
+    \t\theaders: {{
+    \t\t\t'Accept': 'application/json',
+    \t\t\t'Content-Type': 'application/json'
+    \t\t}},
+    \t\tbody: params
+    \t}});
+    \treturn await r.json();
+    }}""".replace("    ", '')
 
-def generate_python(fname: str, pnames: List[str], domain: str, port: int) -> str:
-    return "TODO"
+def generate_python(signature: str, doc: str, domain: str, port: int) -> str:
+    #doc = '' #f"""'''{doc.replace("'''", '"' * 3)}\'\'\'"""
+    return f"""
+    from bonapity import vuosi
+
+    @vuosi('{str(domain)}', {port})
+    def {signature}:\n\tpass
+    """.replace("    ", '')
 
 class BonAppServer(http.server.BaseHTTPRequestHandler):
     def __init__(self, *args, **kargs):
@@ -314,15 +321,16 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                     <details>
                         <summary><h3>Python Client</h3></summary>
                         <i><code style='display:block;white-space:pre-wrap'>{
-                        generate_python(fname, list(inspect.signature(fun).parameters.keys()), 'localhost', self.port)
+                        generate_python(sig, doc, 'localhost', self.port)
                         }</code></i>
+                        <br/>Remeber, all arguments are now nammed...
                     </details>
                     <details>
                         <summary><h3>Javascrit</h3></summary>
                         <i><code style='display:block;white-space:pre-wrap'>{
                         generate_js(fname, list(inspect.signature(fun).parameters.keys()), 'localhost', self.port)
                         }</code></i>
-                        Remember to use <tt>await</tt>...
+                        <br/>Remember to use <tt>await</tt>...
                     </details>
                 </div>
                 <div style="position:absolute;bottom:5;right:5;">
