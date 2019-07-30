@@ -2,8 +2,8 @@ from setuptools import setup
 
 setup(
     name='bonapity',
-    version='0.1.5',
-    description='Get a simple HTTP (GET) API with only this simple decorator : @bonapity !',
+    version='0.1.7',
+    description='Get a simple HTTP (GET & POST) API with only this simple decorator : @bonapity !',
     long_description="""
 # 👀 BONAPITY 👀
 
@@ -16,6 +16,15 @@ don't loose your time to 💁, we do it for you... :)
 By type hinting your code we cast 
 the received inputs to the right type ! 
 so don't worry about it... 😀
+
+Even better, for each function generated a corresponding doc page is served 
+including auto-generated example of python and javascript to make things 
+easier to create a client for your API !
+
+-------------------------------------------
+
+🚧: still in 👷 🏗 ⚠️, already great features implemented, 
+but the official git is not still openned... stay tuned ! 😃 🎞🎞🎞 
     """,
     long_description_content_type='text/markdown',
     url='http://github.com/VieVie31/bonapity',
