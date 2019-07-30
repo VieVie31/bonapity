@@ -77,6 +77,8 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         """
         __decorated = globals()["__decorated"]
 
+        #print("start process")
+
         parsed_url = urllib.parse.urlparse(self.path)
 
         fun = __decorated[parsed_url.path]
@@ -91,6 +93,8 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                  k == full_arg_spec.varargs or k == full_arg_spec.varkw,
             sig.parameters.keys()
         ))
+
+        #print("default params checked")
         
         if sorted(set(sig.parameters.keys()) - set(ignored_params_names)) \
           != sorted(set(parameters.keys()) - set(ignored_params_names)):
@@ -103,6 +107,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
 
         #try
         for param_key, param_value in parameters.items():
+            #print("param:", param_key, param_value)
             if len(param_value) != 1:
                 self.send_response(500)
                 self.send_header('Content-type','application/json')
@@ -185,6 +190,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             if not k in parameters:
                 parameters[k] = sig.parameters[k].default
 
+        #print("executing")
         # Execute the function or die
         try:
             # Fill the first positional arguments in the right order
@@ -192,20 +198,28 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                 fun,
                 *[parameters[a] for a in inspect.getfullargspec(fun).args]
             )
+            #print("partial 1")
 
             # Fill the *args if any
             if full_arg_spec.varargs != None and len(full_arg_spec.varargs):
                 f = functools.partial(f, *parameters[full_arg_spec.varargs])
 
+            #print("partial 2")
+
             # Fill the **kargs if any
             if full_arg_spec.varkw != None and len(full_arg_spec.varkw):
                 f = functools.partial(f, **parameters[full_arg_spec.varkw])
 
+            #print("partial 3")
+
             res = f()
+            #print("res:", res)
 
             # Ecode result in JSON
             try:
+                #print("encoding JSON res")
                 res = json.dumps(res)
+                #print("encoded:", res)
 
                 # Send success
                 self.send_response(200)
@@ -398,9 +412,11 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         return 
         
     def do_POST(self):
+        #print("start do_POST")
         content_len = int(self.headers['Content-Length'])
         rfile = self.rfile
         if self.headers['Content-Type'] == "application/json":
+            #print("is json")
             parameters = json.loads(rfile.read(content_len).decode())
         elif self.headers['Content-Type'] == "application/python-pickle":
             parameters = pickle.loads(rfile.read(content_len))
@@ -415,7 +431,8 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                 """.encode())
             return
         #TODO: handle application/x-www-form-urlencoded ?
-        
+        #print(parameters)
+
         # Prepare paramters in the formats as if they was parsed from url
         parameters = {k: [parameters[k]] for k in parameters}
         
@@ -527,18 +544,19 @@ def vuosi(domain: str, port: int):
             For example do not write f(3) but f(x=3)...
             """
             params = pickle.dumps(params)
-            
+            #print("starting fetch")
             r =  urllib.request.urlopen(urllib.request.Request(
                 f'http://{domain}:{port}/{fun.__name__}', 
                 data=params, 
-                headers={"Content-Type": "application/python-pickle"
-            }))
-
+                headers={"Content-Type": "application/python-pickle"}
+            ))
+            #print("returned result")
             if r.status != 200:
                 raise Exception(
                     f"Failed to fetch result, code : [{r.status}], message : {r.read()}"
                 )
             res = r.read()
+            #print(res)
             try:
                 res = pickle.loads(res)
             except:
