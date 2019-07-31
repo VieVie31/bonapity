@@ -1,75 +1,57 @@
 # 👀 README 👀
-
-`bonAPIty` is a python3 package allowing you to create simple API (GET) 
-for your functions without writting any complicated line of server code
-and it's even simpler than Flask !
-
-You are the 👨‍🍳, just do what you do the best : cook code !
-don't loose your time to 💁, we do it for you... :)
-
-By type hinting your code we cast the received inputs to the right type ! so don't worry about it... 😀
+`bonAPIty` is a python3 package allowing you to create simple API (GET) for your functions without writing any complicated line of server code and it is even simpler than Flask !  
+You are the 👨‍🍳, just do what you do the best: cook code ! Do not lose your time to 💁, we do it for you :).  
+By type hinting your code we cast the received inputs to the right type, so do not worry about it 😀.
 
 ## Install
-
-Install it with `pip3 install bonapity` and take a look to `examples/` !
+Install it with `pip3 install bonapity` and take a look at `examples/` !
 
 ## Current support
+Send your data via GET and receive results in a JSON object. We accept basic python data types such as : 
+`int, float, bool, list, tuple, dict, set, frozenset`.  
 
-Send your data via GET and receive results in JSON.
-We accept basic python data types such as : 
-`int, float, bool, list, tuple, dict, set, frozenset`
-
-
-For each function, your API will return your computation as JSON 
-if your return type is JSON serializable or in pickle else 
-(for example numpy.ndarray are not JSON serializable and 
-will be returned as a binary pickle dump).
-
+For each function, your API will return your computation as a JSON object if your return type is JSON serializable, or in the pickle format otherwise. For example, numpy.ndarray objects are not JSON serializable and will be returned as a binary pickle dump.
 
 ## Example
-
 ```python
 from bonapity import bonapity
 
 @bonapity
 def add(a: int, b: int) -> int:
-    "Add two numbers"
+    """ Add two numbers. """
     return a + b
 
 if __name__ == "__main__":
     bonapity.serve()
 ```
 
-For more examples with explanations take a look to the `examples/` dir...
-
-Recommanded order for reading : 
-
-- How to import the decorator, use it and serve : `simplest.py`
-- Having a simple web interface using your simplest.py API : `simplest.html`
-- Using your API from a python client : `np_server_api.py`, `np_client_api.py`
-- Send/receive complex non python generic data types (such as np.ndarrays) with a python client : `python_server.py`, `python_client.py`
+For more examples with explanations take a look to the `examples/` dir.  
+Recommended order for reading : 
+- How to import the decorator, use it and serve : `simplest.py`.
+- Having a simple web interface using your simplest.py API : `simplest.html`.
+- Using your API from a python client : `np_server_api.py`, `np_client_api.py`.
+- Send/receive complex non python generic data types (such as np.ndarray) with a python client : `python_server.py`, `python_client.py`.
 
 ## How To ?
-
 > "I am not accustomed to protocol."
 > 
 > -- <cite>Evo Morales</cite>
 
 We currently support 2 types of requests : `GET` and `POST`. 
-Each of them accept 2 different ways to get your data/parameters transfered from client to the your API. 
+Each of them accept 2 different ways to get your data/parameters sent from the client to the your API. 
 
 But remember, we process those encoded data and present them to your code as if
-they wasn't received from a complex protocol, everything is transparent for you !
+they were not received from a complex protocol, everything is transparent for you !
 
 You don't need to read this section for a quick start, just use the generated 
-wappers in the generated documentation of your API (run the server and go to `/help/`), read this only if you want to have hands dirty and not use the 
-generated wrapper but write your ones instead...
+wrappers in the generated documentation of your API (run the server and go to `/help/`), read this only if you want to get your hands dirty and not use the 
+generated wrapper but write your one instead.
 
 ### GET
  - **query string** : `/myfun?param1=value1&param2=value2`.  
-   Each value can be formated in JSON or a python string (eg. `v=True`is python but will be interpreted as the boolean `True` as if `v=true` which is the JSON encoding). Note that if your value is a string, it should be surrounded by `"`...
+   Each value can be formatted in JSON or a python string (eg. `v=True`is python but will be interpreted as the boolean `True` as if `v=true` which is the JSON encoding). Note that if your value is a string, it should be surrounded by `"`.
  - **pass pickle object** : `/myfun?MY_BASE64_ENCODED_DATA`. 
-   You can pass complex non JSON serializabe python type by encoding in base64 the binary pickle dump representation of your data.  
+   You can pass complex non JSON serializable python type by encoding in base64 the binary pickle dump representation of your data.  
    Here the encoded data shoud be a key/value dictionnary where keys correspond to the parameters name of your function and values are... your values... This argument SHOULD NOT have a value !  
    For example, the equivalent of `/myfun?v=23` would be `/myfun?gAN9cQBYAQAAAHZxAUsXcy4=` because `gAN9cQBYAQAAAHZxAUsXcy4=` the base64 of `\x80\x03}q\x00X\x01\x00\x00\x00vq\x01K\x17s.` which is the pickle dump of `{'v': 23}`.  
    Note that we use python3, do not encode in the python2 version of pickle...
