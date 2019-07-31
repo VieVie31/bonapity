@@ -1,5 +1,5 @@
 """
-Get a simple HTTP (GET) API with only this simple decorator : `@bonapity` !
+Get a simple HTTP (REST) API with only this simple decorator : `@bonapity` !
 See documentation with : `help(bonapity)`.
 
 @author: VieVie31
@@ -20,8 +20,8 @@ from typing import List
 from types import MethodType
 from collections import defaultdict
 
-__version__ = "0.1.8"
-__version_info__ = (0, 1, 4)
+__version_info__ = (0, 1, 9)
+__version__ = '.'.join(map(str, __version_info__))
 __author__ = "Olivier RISSER-MAROIX (VieVie31)"
 
 __all__ = ["bonapity", "vuosi"]
@@ -438,6 +438,16 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         self.process(parameters, value_already_evaluated=True)
         return
 
+    # Accepting other REST verbs
+
+    def do_DELETE(self):
+        self.do_GET()
+    
+    def do_PUT(self):
+        self.do_POST()
+    
+    def do_PATCH(self):
+        self.do_POST()
 
 def serve(self, port=8888, help=True):
     """
