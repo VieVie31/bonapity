@@ -5,10 +5,11 @@ from bonapity import vuosi
 # This decorator will do the API's call for you, don't worry !
 @vuosi('localhost', 8888)
 # The function should have the same signature as the API
-def reshape(ndarray, nrow, ncol):
+def reshape(ndarray: np.ndarray, nrow: int, ncol: int) -> np.ndarray:
     # <!> the argument are automatically transformed into key 
     # arguments take a look to the call bellow...
     pass
+
 
 if __name__ == "__main__":
     print('---------------------------------------------------------------')
@@ -25,5 +26,3 @@ if __name__ == "__main__":
     print("All the complex api server calls are already done for you !\n")
     print("Just use the `@vuosi` decorator... :D\n")
     print("BonAPIty ! Merci, VuOssi ! ;)")
-
-

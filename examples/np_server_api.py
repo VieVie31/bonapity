@@ -1,21 +1,26 @@
 import random
 
+from typing import Union
+
 import numpy as np
 
 from bonapity import bonapity
 
+
 @bonapity
 def json_serializable_res() -> dict:
     return {
-        'this object is' : "JSON Serialisable"
+        'this object is': "JSON Serialisable"
     }
 
-@bonapity
-def pickle_serializable_res() -> np.array:
-    return np.array([0.])
 
 @bonapity
-def surprise_res():
+def pickle_serializable_res() -> np.ndarray:
+    return np.array([0.])
+
+
+@bonapity
+def surprise_res() -> Union[str, np.ndarray]:
     # Example where we don't know in advance 
     # if the return is in JSON or pickle
     return random.choice([
@@ -27,4 +32,3 @@ def surprise_res():
 if __name__ == "__main__":
     random.seed(0) #to always return `surprise_res` in same order at each run
     bonapity.serve()
-

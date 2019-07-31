@@ -22,7 +22,9 @@ surprise_res : JSON
 """
 import json
 import pickle
+
 import requests
+
 
 if __name__ == "__main__":
     # Fetch a JSON serializable return
@@ -49,5 +51,3 @@ if __name__ == "__main__":
             # If it's not a Pickle dump, it's a JSON (no other choice)
             res = json.loads(r.content.decode())
         print(f"surprise_res : {res}")
-
-
