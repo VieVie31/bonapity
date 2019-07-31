@@ -23,7 +23,7 @@ from types import MethodType
 from collections import defaultdict
 from multiprocessing import Process, Manager
 
-__version_info__ = (0, 1, 10)
+__version_info__ = (0, 1, 11)
 __version__ = '.'.join(map(str, __version_info__))
 __author__ = "Olivier RISSER-MAROIX (VieVie31)"
 

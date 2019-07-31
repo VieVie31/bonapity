@@ -116,10 +116,11 @@ generated wrapper but write your one instead.
 - [x] add automatic wrapper code generation to include in doc (will make usage by clients even much simpler) (TODO: make a better python version not converting the args into kargs)
 - [x] Handle the others commands of the REST API standard : `PUT`, `DELETE`, `PATCH`
 - [x] make the server multi-threaded to be non blocking (non sequential, request after request)
-- [ ] allow to put time limit execution on function to not be f*** by infinite loop or just too long function coupled with stupid/poorly intensionned user
+- [x] allow to put time limit execution on function to not be f*** by infinite loop or just too long function coupled with stupid/poorly intensionned user (implemented now : same timeout for every function)
 - [ ] add Session support
 - [ ] generate wrappers of all the functions available in API into a served JavaScript file to just have to include the link
 - [ ] same thing as previous one but with python
+- [ ] refactorize code
 
 ## License [CC-BY](https://creativecommons.org/licenses/by/4.0/)
 
