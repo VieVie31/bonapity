@@ -2,8 +2,8 @@ from bonapity import bonapity
 
 
 @bonapity
-def add(a: int, b: int=0) -> int:
-    """Add `a` with `b`if `b`provided else return `a` only.
+def add(a: int, b: int = 0) -> int:
+    """ Add `a` with `b` if `b` is provided, otherwise returns `a` only.
 
     Example:
     ------------------
@@ -15,18 +15,18 @@ def add(a: int, b: int=0) -> int:
 
 @bonapity
 def concatenate(s1: str, s2: str) -> str:
-    "Return the concatenation of `s1` with `s2`."
+    """ Return the concatenation of `s1` with `s2`. """
     return s1 + s2
 
 
+# Note that the decorator can be used to change the name of the served API.
 @bonapity("hello")
 def g():
-    "This function return a JSON string"
-    return "Like we say in french : 'Bon Appetit !'"
+    """ This function returns a fixed string. """
+    return "Like we say in french : 'Bon Appétit !'"
 
 
-# without decorator this function is _private_ 
-# (not accessible via the api)
+# Without decorator this function is _private_ (not accessible via the API).
 def function_wo_api():
     return 23
 
