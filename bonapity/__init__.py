@@ -55,8 +55,10 @@ def generate_js(fname: str, pnames: List[str], domain: str, port: int) -> str:
     \treturn await r.json();
     }}""".replace("    ", '')
 
-def generate_python(signature: str, doc: str, domain: str, port: int) -> str:
+def generate_python(fname: str, signature: str, doc: str, domain: str, port: int) -> str:
     #doc = '' #f"""'''{doc.replace("'''", '"' * 3)}\'\'\'"""
+    # Replace the default function name in the signature...
+    signature = '('.join([fname[1:]] + signature.split('(')[1:])
     return f"""
     from bonapity import vuosi
 
@@ -331,7 +333,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                     <details>
                         <summary><h3>Python Client</h3></summary>
                         <i><code style='display:block;white-space:pre-wrap'>{
-                        generate_python(sig, doc, 'localhost', self.port)
+                        generate_python(fname, sig, doc, 'localhost', self.port)
                         }</code></i>
                         <br/>Remeber, all arguments are now nammed...
                     </details>
@@ -357,12 +359,12 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             send_header(self, 404, 'text/html')
             self.wfile.write(f"{parsed_url.path} : this function do not exists...".encode())
             return
-        
+
         # Will be replaced by True id data loaded from pickle
         value_already_evaluated = False
 
         urlargs = parsed_url.query.split('&')
-        if len(urlargs) == 1 and urlargs[0].endswith('=' * urlargs[0].count('=')):
+        if len(urlargs) == 1 and urlargs[0].endswith('=' * urlargs[0].count('=')) and urlargs[0] != '':
             # Only an argument without value ?  `?Ym9uYXBpdHk=`
             # this should be a base64 pickled object
             try:
@@ -396,14 +398,29 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         return 
         
     def do_POST(self):
-        #print("start do_POST")
         content_len = int(self.headers['Content-Length'])
         rfile = self.rfile
         if self.headers['Content-Type'] == "application/json":
-            #print("is json")
-            parameters = json.loads(rfile.read(content_len).decode())
+            try:
+                parameters = json.loads(rfile.read(content_len).decode())
+            except:
+                send_header(self, 400, 'text/html')
+                self.wfile.write(
+                    b"""Content-Type : application/json expect json object...
+                    we failed to load it, check your input...
+                    """
+                )
         elif self.headers['Content-Type'] == "application/python-pickle":
-            parameters = pickle.loads(rfile.read(content_len))
+            try:
+                parameters = pickle.loads(rfile.read(content_len))
+            except:
+                send_header(self, 400, 'text/html')
+                self.wfile.write(
+                    b"""Content type : application/python-pickle expect pickle binary object... 
+                    we failed to load it, check your input... 
+                    (maybe wrong version of pickle), we use python3...")
+                    """
+                )
         else:
             send_header(self, 400, 'text/html')
             self.wfile.write(
