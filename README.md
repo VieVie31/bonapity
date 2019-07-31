@@ -1,6 +1,6 @@
 # 👀 README 👀
 
-`bonAPIty` is a python3 package allowing you to create simple API (GET) 
+`bonAPIty` is a python3 package allowing you to create simple API (GET & POST) 
 for your functions without writting any complicated line of server code
 and it's even simpler than Flask !
 
@@ -12,18 +12,6 @@ By type hinting your code we cast the received inputs to the right type ! so don
 ## Install
 
 Install it with `pip3 install bonapity` and take a look to `examples/` !
-
-## Current support
-
-Send your data via GET and receive results in JSON.
-We accept basic python data types such as : 
-`int, float, bool, list, tuple, dict, set, frozenset`
-
-
-For each function, your API will return your computation as JSON 
-if your return type is JSON serializable or in pickle else 
-(for example numpy.ndarray are not JSON serializable and 
-will be returned as a binary pickle dump).
 
 
 ## Example
@@ -70,7 +58,8 @@ generated wrapper but write your ones instead...
    Each value can be formated in JSON or a python string (eg. `v=True`is python but will be interpreted as the boolean `True` as if `v=true` which is the JSON encoding). Note that if your value is a string, it should be surrounded by `"`...
  - **pass pickle object** : `/myfun?MY_BASE64_ENCODED_DATA`. 
    You can pass complex non JSON serializabe python type by encoding in base64 the binary pickle dump representation of your data.  
-   Here the encoded data shoud be a key/value dictionnary where keys correspond to the parameters name of your function and values are... your values... This argument SHOULD NOT have a value !  
+   Here the encoded data shoud be a key/value dictionnary where keys correspond to the parameters name of your function and values are... your values...  
+   This argument SHOULD NOT have a value !  
    For example, the equivalent of `/myfun?v=23` would be `/myfun?gAN9cQBYAQAAAHZxAUsXcy4=` because `gAN9cQBYAQAAAHZxAUsXcy4=` the base64 of `\x80\x03}q\x00X\x01\x00\x00\x00vq\x01K\x17s.` which is the pickle dump of `{'v': 23}`.  
    Note that we use python3, do not encode in the python2 version of pickle...
 
@@ -98,6 +87,10 @@ generated wrapper but write your ones instead...
 
 
 ## License [CC-BY](https://creativecommons.org/licenses/by/4.0/)
+
+> "We protect monopolies with copyright."
+> 
+> -- <cite>Peter Thiel</cite>
 
 ### You are free to:
 
