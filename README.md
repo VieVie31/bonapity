@@ -117,6 +117,7 @@ generated wrapper but write your one instead.
 - [x] Handle the others commands of the REST API standard : `PUT`, `DELETE`, `PATCH`
 - [x] make the server multi-threaded to be non blocking (non sequential, request after request)
 - [ ] allow to put time limit execution on function to not be f*** by infinite loop or just too long function coupled with stupid/poorly intensionned user
+- [ ] add Session support
 - [ ] generate wrappers of all the functions available in API into a served JavaScript file to just have to include the link
 - [ ] same thing as previous one but with python
 
