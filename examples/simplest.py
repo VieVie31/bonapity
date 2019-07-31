@@ -31,6 +31,31 @@ def function_wo_api():
     return 23
 
 
+@bonapity
+def wait(s: int=1) -> int:
+    """
+    The purpose of this function is only to show that 
+    the miltithreading is supported by your API server ! :D
+
+    Go to your terminal and write:
+    ```bash
+    for i in 1 2 3 4 5; 
+    do
+        curl "http://localhost:8888/wait?s=5" & 
+    done
+    ```
+    All the  5 should be printed at the same time just after 5 seconds 
+    and not one after the other which would take instead : 5s * 5s = 25s 
+    before printing the last one.
+
+    :param s: the number of seconds before returning its value `s`
+    :return: `s` the number of seconds asked to wait
+    """
+    import time
+    time.sleep(s)
+    return s
+
+
 if __name__ == "__main__":
     port = 8888
     print(f"""
