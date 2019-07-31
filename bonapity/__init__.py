@@ -16,11 +16,12 @@ import http.server
 import urllib.parse
 import urllib.request
 import socketserver
-
+import time
 
 from typing import List
 from types import MethodType
 from collections import defaultdict
+from multiprocessing import Process, Manager
 
 __version_info__ = (0, 1, 10)
 __version__ = '.'.join(map(str, __version_info__))
@@ -89,6 +90,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         super(BonAppServer, self).__init__(*args, **kargs)
         self.help = True
         self.port = 80
+        self.timeout = 0.
 
     def process(self, parameters, value_already_evaluated=False):
         """
@@ -212,7 +214,43 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             if full_arg_spec.varkw != None and len(full_arg_spec.varkw):
                 f = functools.partial(f, **parameters[full_arg_spec.varkw])
 
-            res = f()
+            if self.timeout > 0.:
+                # Create shared variable wich will contain the result function
+                manager = Manager()
+                return_dict = manager.dict()
+
+                def execute_and_save_result(fun, return_dict):
+                    # Ececute the tunction and store result in shared memory
+                    return_dict[0] = fun()
+
+                # Create a process
+                action_process = Process(
+                    target=execute_and_save_result, 
+                    args=(f, return_dict)
+                )
+
+                # Start the process and we block for the required timeout
+                action_process.start()
+                action_process.join(timeout=self.timeout)
+
+                # Terminate the process
+                action_process.terminate()
+
+                if 0 in return_dict:
+                    # Get result from shared memory
+                    res = return_dict[0]
+                else:
+                    # Time out error
+                    send_header(self, 500, 'text/html')
+                    self.wfile.write(
+                        f"""Timeout error: execution of {fun.__name__} 
+                        took more than the {self.timeout} allowed seconds
+                        """.encode()
+                    )
+                    return
+            else:
+                # No timeout constraint
+                res = f()
 
             # Ecode result in JSON
             try:
@@ -439,7 +477,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
 class ThreadingBonAppServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
     pass
 
-def serve(self, port=8888, help=True, verbose=True):
+def serve(self, port=8888, help: bool=True, timeout: int=0, verbose: bool=True):
     """
     Serve your API forever.
 
@@ -448,6 +486,9 @@ def serve(self, port=8888, help=True, verbose=True):
     :param help:
         return the documentation of functions at 
         `http://[SERVER]/help/[FUN_NAME|ROOT]`
+    :param timeout: 
+        number of seconds before ending the function and returning 
+        timeout error message, if 0, no timeout is applied
     :param verbose:
         display some informations such as the port where the server w'll run
 
@@ -463,7 +504,6 @@ def serve(self, port=8888, help=True, verbose=True):
     global __decorated
     PORT = port
     server_address = ("", PORT)
-    server = http.server.HTTPServer
     handler = BonAppServer
 
     if verbose:
@@ -474,11 +514,12 @@ def serve(self, port=8888, help=True, verbose=True):
     httpd.RequestHandlerClass.bonapity = self
     httpd.RequestHandlerClass.help = help
     httpd.RequestHandlerClass.port = port
+    httpd.RequestHandlerClass.timeout = timeout
 
     httpd.serve_forever()
 
 
-def bonapity(fun=None, name: str = None):
+def bonapity(fun=None, name: str=None):
     """
     Get a simple HTTP GET API with this simple decorator.
     You'll be able to use your function at :
