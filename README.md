@@ -49,7 +49,7 @@ Testing REST verbs requests with `curl` :
 ```bash
 curl -X GET "http://localhost:8888/add?a=1&b=3"
 curl -X DELETE "http://localhost:8888/add?a=1&b=3"
-curl --data '{"a": 1, "b": 3}' -X POST   "http://localhost:8888/add" -H "ContentType: application/json"
+curl --data '{"a": 1, "b": 3}' -X POST   "http://localhost:8888/add" -H "Content-Type: application/json"
 curl --data '{"a": 1, "b": 3}' -X PATCH  "http://localhost:8888/add" -H "Content-Type: application/json"
 curl --data '{"a": 1, "b": 3}' -X PUT    "http://localhost:8888/add" -H "Content-Type: application/json"
 ```
