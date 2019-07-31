@@ -12,6 +12,7 @@ def add(a: int, b: int=0) -> int:
     """
     return a + b
 
+
 @bonapity
 def concatenate(s1: str, s2: str) -> str:
     "Return the concatenation of `s1` with `s2`."
@@ -23,10 +24,12 @@ def g():
     "This function return a JSON string"
     return "Like we say in french : 'Bon Appetit !'"
 
+
 # without decorator this function is _private_ 
 # (not accessible via the api)
 def function_wo_api():
     return 23
+
 
 if __name__ == "__main__":
     port = 8888
@@ -47,6 +50,3 @@ if __name__ == "__main__":
     Cool ! You did it ! Now read the doc and enjoy ! :)
     """)
     bonapity.serve(port=port)
-    
-
-
