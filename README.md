@@ -52,44 +52,43 @@ generated wrapper but write your one instead.
    Each value can be formatted in JSON or a python string (eg. `v=True`is python but will be interpreted as the boolean `True` as if `v=true` which is the JSON encoding). Note that if your value is a string, it should be surrounded by `"`.
  - **pass pickle object** : `/myfun?MY_BASE64_ENCODED_DATA`. 
    You can pass complex non JSON serializable python type by encoding in base64 the binary pickle dump representation of your data.  
-   Here the encoded data shoud be a key/value dictionnary where keys correspond to the parameters name of your function and values are... your values... This argument SHOULD NOT have a value !  
+   Here the encoded data should be a key/value dictionary where keys correspond to the parameters name of your function and values are... well your values.  
+   This argument SHOULD NOT have a value !  
    For example, the equivalent of `/myfun?v=23` would be `/myfun?gAN9cQBYAQAAAHZxAUsXcy4=` because `gAN9cQBYAQAAAHZxAUsXcy4=` the base64 of `\x80\x03}q\x00X\x01\x00\x00\x00vq\x01K\x17s.` which is the pickle dump of `{'v': 23}`.  
-   Note that we use python3, do not encode in the python2 version of pickle...
+   Note that we use python3, do not encode in the python2 version of pickle.
 
 ### POST
  - **application/json** : 
-   The data receveid by the server will be parsed as a JSON file and interpreted as a key/value dictionary where keys correspond to your param names of your functions and values the corresponding values...  
-   Here the encoded data shoud be a key/value dictionnary where keys correspond to the parameters name of your function and values are... your values...
+   The data received by the server will be parsed as a JSON file and interpreted as a key/value dictionary where keys correspond to your param names of your functions and values the corresponding values.  
+   Here the encoded data should be a key/value dictionary where keys correspond to the parameters name of your function and values are... well your values.
  - **application/python-pickle** : 
    The data received should be a binary pickled object (do not encode it in base64 for example) which will be loaded by pickle (python3, be aware of your pickle encoder version).
- - No other type of content is accepted (such as _application/x-www-form-urlencoded_), so, if you are using the requests module be aware to not write `requests.post(url, data={...})` but `requests.post(url, json={...})` instead, or specifying the _Content-Type_ in the header...
+ - No other type of content is accepted (such as _application/x-www-form-urlencoded_), so, if you are using the `requests` module, be aware to not write `requests.post(url, data={...})` but `requests.post(url, json={...})` instead, or specifying the _Content-Type_ in the header.
 
 
 ## In Development
-
 > "I'll probably will do it, maybe definitely"
 > 
 > -- <cite>Donald J. Trump</cite>
 
-- [x] `POST` suppport
+- [x] `POST` support
 - [x] returning serialized pickle dump if return type is not JSON serializable
 - [x] allow to pass non generic python types such as `numpy.ndarrays` as parameter
-- [x] add automatic wapper code generation to include in doc (will make usage by clients even much simpler) (TODO: make a better python version not converting the args into kargs)
+- [x] add automatic wrapper code generation to include in doc (will make usage by clients even much simpler) (TODO: make a better python version not converting the args into kargs)
 - [ ] Handle the others commands of the REST API standard : `PUT`, `DELETE`, `PATCH`
-- [ ] make the server multithreaded to be non blocking (non sequential, request after request)
+- [ ] make the server multi-threaded to be non blocking (non sequential, request after request)
 
 
 ## License [CC-BY](https://creativecommons.org/licenses/by/4.0/)
+> "We protect monopolies with copyright."
+> 
+> -- <cite>Peter Thiel</cite>
 
 ### You are free to:
-
  - **Share** — copy and redistribute the material in any medium or format
  - **Adapt** — remix, transform, and build upon the material for any purpose, even commercially.
-
 The licensor cannot revoke these freedoms as long as you follow the license terms.
 
 ### Under the following terms:
-
  - **Attribution** — You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
-
  - **No additional restrictions** — You may not apply legal terms or technological measures that legally restrict others from doing anything the license permits.
