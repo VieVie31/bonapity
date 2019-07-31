@@ -1,13 +1,15 @@
 # 👀 README 👀
 `bonAPIty` is a python3 package allowing you to create simple API (GET) for your functions without writing any complicated line of server code and it is even simpler than Flask !  
+
 You are the 👨‍🍳, just do what you do the best: cook code ! Do not lose your time to 💁, we do it for you :).  
+
 By type hinting your code we cast the received inputs to the right type, so do not worry about it 😀.
 
 ## Install
 Install it with `pip3 install bonapity` and take a look at `examples/` !
 
 ## Current support
-Send your data via GET and receive results in a JSON object. We accept basic python data types such as : 
+Send your data via GET and receive results in a JSON object. We accept basic python data types such as :  
 `int, float, bool, list, tuple, dict, set, frozenset`.  
 
 For each function, your API will return your computation as a JSON object if your return type is JSON serializable, or in the pickle format otherwise. For example, numpy.ndarray objects are not JSON serializable and will be returned as a binary pickle dump.
