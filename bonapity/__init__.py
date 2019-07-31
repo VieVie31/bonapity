@@ -10,17 +10,19 @@ import inspect
 import functools
 import html
 import json
+import base64
+import pickle
 import http.server
 import urllib.parse
 import urllib.request
-import base64
-import pickle
+import socketserver
+
 
 from typing import List
 from types import MethodType
 from collections import defaultdict
 
-__version_info__ = (0, 1, 9)
+__version_info__ = (0, 1, 10)
 __version__ = '.'.join(map(str, __version_info__))
 __author__ = "Olivier RISSER-MAROIX (VieVie31)"
 
@@ -96,8 +98,6 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         """
         __decorated = globals()["__decorated"]
 
-        # print("start process")
-
         parsed_url = urllib.parse.urlparse(self.path)
 
         fun = __decorated[parsed_url.path]
@@ -111,8 +111,6 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                       k == full_arg_spec.varargs or k == full_arg_spec.varkw,
             sig.parameters.keys()
         ))
-
-        # print("default params checked")
 
         if sorted(set(sig.parameters.keys()) - set(ignored_params_names)) \
                 != sorted(set(parameters.keys()) - set(ignored_params_names)):
@@ -197,8 +195,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         for k in sig.parameters.keys():
             if not k in parameters:
                 parameters[k] = sig.parameters[k].default
-
-        # print("executing")
+        
         # Execute the function or die
         try:
             # Fill the first positional arguments in the right order
@@ -206,28 +203,20 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                 fun,
                 *[parameters[a] for a in inspect.getfullargspec(fun).args]
             )
-            # print("partial 1")
 
             # Fill the *args if any
             if full_arg_spec.varargs != None and len(full_arg_spec.varargs):
                 f = functools.partial(f, *parameters[full_arg_spec.varargs])
 
-            # print("partial 2")
-
             # Fill the **kargs if any
             if full_arg_spec.varkw != None and len(full_arg_spec.varkw):
                 f = functools.partial(f, **parameters[full_arg_spec.varkw])
 
-            # print("partial 3")
-
             res = f()
-            # print("res:", res)
 
             # Ecode result in JSON
             try:
-                # print("encoding JSON res")
                 res = json.dumps(res)
-                # print("encoded:", res)
 
                 # Send success
                 send_header(self, 200, 'application/json')
@@ -438,8 +427,6 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         self.process(parameters, value_already_evaluated=True)
         return
 
-    # Accepting other REST verbs
-
     def do_DELETE(self):
         self.do_GET()
     
@@ -449,7 +436,10 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
     def do_PATCH(self):
         self.do_POST()
 
-def serve(self, port=8888, help=True):
+class ThreadingBonAppServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
+    pass
+
+def serve(self, port=8888, help=True, verbose=True):
     """
     Serve your API forever.
 
@@ -458,6 +448,8 @@ def serve(self, port=8888, help=True):
     :param help:
         return the documentation of functions at 
         `http://[SERVER]/help/[FUN_NAME|ROOT]`
+    :param verbose:
+        display some informations such as the port where the server w'll run
 
     :type port: int
     :type help: bool
@@ -474,8 +466,10 @@ def serve(self, port=8888, help=True):
     server = http.server.HTTPServer
     handler = BonAppServer
 
-    print(f"Server running on  port : {PORT}")
-    httpd = server(server_address, handler)
+    if verbose:
+        print(f"Server running on  port : {PORT}")
+    
+    httpd = ThreadingBonAppServer(server_address, handler)
 
     httpd.RequestHandlerClass.bonapity = self
     httpd.RequestHandlerClass.help = help
@@ -559,13 +553,11 @@ def vuosi(domain: str, port: int):
             For example do not write f(3) but f(x=3)...
             """
             params = pickle.dumps(params)
-            # print("starting fetch")
             r = urllib.request.urlopen(urllib.request.Request(
                 f'http://{domain}:{port}/{fun.__name__}',
                 data=params,
                 headers={"Content-Type": "application/python-pickle"}
             ))
-            # print("returned result")
             if r.status != 200:
                 raise Exception(
                     f"Failed to fetch result, code : [{r.status}], message : {r.read()}"
