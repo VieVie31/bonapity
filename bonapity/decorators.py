@@ -3,6 +3,8 @@ This module contains all the functions which will be converted into decorators.
 
 @author: VieVie31
 """
+from types import MethodType
+
 from .server import *
 from .decoration_classes import *
 
@@ -53,7 +55,7 @@ def session(self):
     raise NotImplementedError()
 
 
-def bonapity(fun=None, name: str=None):
+def bonapity(fun=None, name: str=None, timeout=0):
     """
     Get a simple HTTP GET API with this simple decorator.
     You'll be able to use your function at :
@@ -92,7 +94,7 @@ def bonapity(fun=None, name: str=None):
 
     fname = fun.__name__ if not name else name
     fname = f"{'' if fname[0] == '/' else '/'}{fname}"
-    DecoratedFunctions.all[fname] = fun
+    DecoratedFunctions.all[fname] = BonapityDecoratedFunction(fun, timeout)
 
     @functools.wraps(fun)
     def f(*args, **kwargs):
