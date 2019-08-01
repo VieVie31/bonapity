@@ -60,7 +60,6 @@ class Singleton(type):
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
 
-#FIXME: not finished to be implemented
 class SessionManager(metaclass=Singleton):
     def __init__(self, session_timeout: int=10):
         """
@@ -71,13 +70,15 @@ class SessionManager(metaclass=Singleton):
             the session content of a specific user will be deleted 
             after this number of second of inactivity (not using the session)
         """
-        raise NotImplementedError()
+        #raise NotImplementedError()
         self.session_timeout = session_timeout
         # `self.session` will contain for each SESSIONID as key a dict 
         # of the stored session data, aslo if the SESSIONID was not registered
         # the default dict corresponding to an emtpy session is {}
         self.sessions = defaultdict(UserSession) #(UserSession look like dict)
-    
+        # Create the thread doing the session garbage collector task
+        threading.Timer(self.session_timeout, self.__clean_timedout_session).start()
+
     def __getitem__(self, sessionid) -> UserSession:
         return self.sessions[sessionid]
     
@@ -91,10 +92,14 @@ class SessionManager(metaclass=Singleton):
         del self.sessions[sessionid]
     
     def __clean_timedout_session(self):
-        for session in self.session:
-            #TODO: check if unused since self.timeout
-            raise NotImplementedError()
-
-
-
-
+        # Schedule the next GC call
+        threading.Timer(
+            1, # call each second ? too often ? I don't know...
+            self.__clean_timedout_session
+        ).start()
+        # Delete if timeout or empty
+        for sessionid in list(self.sessions.keys()):
+            if time.time() - self.sessions[sessionid].last_timestamp > self.session_timeout \
+                  or len(self.sessions[sessionid].storage) == 0:
+                del self.sessions[sessionid]
+    
