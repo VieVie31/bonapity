@@ -31,7 +31,7 @@ def function_wo_api():
     return 23
 
 
-@bonapity
+@bonapity(timeout=6)
 def wait(s: int=1) -> int:
     """
     The purpose of this function is only to show that 
@@ -67,11 +67,14 @@ if __name__ == "__main__":
     - test the `add` function : http://localhost:{port}/add?a=1&b=3
     - look at the doc of the `add` function : http://localhost:{port}/help/add
     - try the `concatenate` function : http://localhost:{port}/concatenate?s1=3&s2=4
+    - test the `wait` function : http://localhost:{port}/wait?s=4
 
     * Try to give only the `a` parameter (`b` is default) 
       then only `b` then an extra parameter
     * Try to give non `int` parameters
+    * Try ti delete the specific `timeout` parameter in the wait function
+    * Hack this file :)
 
     Cool ! You did it ! Now read the doc and enjoy ! :)
     """)
-    bonapity.serve(port=port)
+    bonapity.serve(port=port, timeout=10) #by default, every function will stop after 10s execution completed or not
