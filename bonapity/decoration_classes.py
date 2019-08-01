@@ -19,7 +19,9 @@ class DecoratedFunctions(object):
 
 @dataclass
 class BonapityDecoratedFunction():
-    #NOT USED FOR NOW
+    """
+    This class store the function and the timeout allowed for it.
+    """
     fun: typing.Callable
     timeout: int = 0
 

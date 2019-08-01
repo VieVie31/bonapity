@@ -54,7 +54,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         super(BonAppServer, self).__init__(*args, **kargs)
         self.help = True
         self.port = 80
-        self.timeout = 0.
+        self.default_timeout = 1
 
     def process(self, parameters, value_already_evaluated=False):
         """
@@ -65,8 +65,14 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
 
         parsed_url = urllib.parse.urlparse(self.path)
 
-        fun = DecoratedFunctions.all[parsed_url.path]
+        # Get the function in the decorated function list
+        fun = DecoratedFunctions.all[parsed_url.path].fun
         sig = inspect.signature(fun)
+
+        # Get the timeout informatin of the function, is None set a default one
+        timeout = DecoratedFunctions.all[parsed_url.path].timeout
+        if timeout is None:
+            timeout = self.default_timeout
 
         # Check if parameters names matches 
         # (and ignore default and *args, **kargs parameters)
@@ -177,7 +183,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             if full_arg_spec.varkw != None and len(full_arg_spec.varkw):
                 f = functools.partial(f, **parameters[full_arg_spec.varkw])
 
-            if self.timeout > 0.:
+            if timeout > 0.:
                 # Create shared variable wich will contain the result function
                 manager = Manager()
                 return_dict = manager.dict()
@@ -194,7 +200,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
 
                 # Start the process and we block for the required timeout
                 action_process.start()
-                action_process.join(timeout=self.timeout)
+                action_process.join(timeout=timeout)
 
                 # Terminate the process
                 action_process.terminate()
@@ -272,7 +278,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             if fname in ['', '/', '/*']:
                 modules = defaultdict(list)
                 for fname in DecoratedFunctions.all.keys():
-                    modules[DecoratedFunctions.all[fname].__module__].append(fname)
+                    modules[DecoratedFunctions.all[fname].fun.__module__].append(fname)
 
                 html_out = f"""
                     <h1>Index of functions available in the API</h1><hr>
@@ -309,7 +315,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                 send_header(self, 404, 'text/html')
                 self.wfile.write(f"{fname} : this function do not exists...".encode())
                 return
-            fun = DecoratedFunctions.all[fname]
+            fun = DecoratedFunctions.all[fname].fun
             sig = html.escape(f"{fun.__name__}{inspect.signature(fun)}")
             doc = html.escape(fun.__doc__) if fun.__doc__ else ''
             html_out = f"""

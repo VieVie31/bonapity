@@ -11,7 +11,7 @@ from .decoration_classes import *
 __all__ = ["bonapity", "vuosi"]
 
 
-def serve(self, port=8888, help: bool=True, timeout: int=0, verbose: bool=True):
+def serve(self, port=8888, help: bool=True, timeout: int=10, verbose: bool=True):
     """
     Serve your API forever.
 
@@ -47,7 +47,7 @@ def serve(self, port=8888, help: bool=True, timeout: int=0, verbose: bool=True):
     httpd.RequestHandlerClass.bonapity = self
     httpd.RequestHandlerClass.help = help
     httpd.RequestHandlerClass.port = port
-    httpd.RequestHandlerClass.timeout = timeout
+    httpd.RequestHandlerClass.default_timeout = timeout
 
     httpd.serve_forever()
 
@@ -55,7 +55,7 @@ def session(self):
     raise NotImplementedError()
 
 
-def bonapity(fun=None, name: str=None, timeout=0):
+def bonapity(fun=None, name: str=None, timeout: int=None):
     """
     Get a simple HTTP GET API with this simple decorator.
     You'll be able to use your function at :
@@ -70,6 +70,8 @@ def bonapity(fun=None, name: str=None, timeout=0):
         the types should be python generics ones
     :param name:
         rename this function in the api to conflict names
+    :param timeout:
+        timeout to kill the function
 
     Example:
     ```
@@ -85,11 +87,11 @@ def bonapity(fun=None, name: str=None, timeout=0):
     """
     if fun is None:
         return functools.partial(
-            bonapity, name=name
+            bonapity, name=name, timeout=timeout
         )
     elif type(fun) == str:
         return functools.partial(
-            bonapity, name=fun
+            bonapity, name=fun, timeout=timeout
         )
 
     fname = fun.__name__ if not name else name
