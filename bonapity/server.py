@@ -77,7 +77,14 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         # Check if parameters names matches
         # (and ignore default and *args, **kargs parameters)
         full_arg_spec = inspect.getfullargspec(fun)
-        ignored_params_names = list(filter(
+        ignored_params_names = [
+            k for k in sig.parameters.keys()
+            if sig.parameters[k].default != inspect._empty
+               or k == full_arg_spec.varargs
+               or k == full_arg_spec.varkw
+        ]
+
+        list(filter(
             lambda k: sig.parameters[k].default != inspect._empty or k == full_arg_spec.varargs or k == full_arg_spec.varkw,
             sig.parameters.keys()
         ))
@@ -85,7 +92,8 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         if sorted(set(sig.parameters.keys()) - set(ignored_params_names)) \
                 != sorted(set(parameters.keys()) - set(ignored_params_names)):
             send_header(self, 400, 'text/html')
-            self.wfile.write(b"Parameters names do not match the signature of the function...")
+            self.wfile.write(
+                b"Parameters names do not match the signature of the function...")
             return
 
         # try
@@ -142,15 +150,18 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                         typing.Tuple[(ftype.__args__[0],) if '__args__' in ftype.__dict__ else None]: tuple(),
                         typing.Set[(ftype.__args__[0],) if '__args__' in ftype.__dict__ else None]: set(),
                         typing.FrozenSet[(ftype.__args__[0],) if '__args__' in ftype.__dict__ else None]: frozenset(),
-                        typing.Dict[ftype.__args__ if '__args__' in ftype.__dict__ and len(ftype.__args__) == 2 else (None, None)]: dict()
+                        typing.Dict[ftype.__args__ if '__args__' in ftype.__dict__ and len(
+                            ftype.__args__) == 2 else (None, None)]: dict()
                     }
                     if ftype in supported_generic_types:
                         # Cast the generic type
                         try:
-                            parameters[param_key] = type(supported_generic_types[ftype])(param_value)
+                            parameters[param_key] = type(
+                                supported_generic_types[ftype])(param_value)
                         except Exception as e:
                             send_header(self, 500, 'application/json')
-                            self.wfile.write(f"Error on parameter `{param_key}` : {e}".encode())
+                            self.wfile.write(
+                                f"Error on parameter `{param_key}` : {e}".encode())
                             return
                     else:
                         # Not a generic python type :
@@ -253,8 +264,10 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         # Send back informations for complex POST
         self.send_response(200, "ok")
-        self.send_header('Access-Control-Allow-Methods', self.headers["Access-Control-Request-Method"])
-        self.send_header("Access-Control-Allow-Headers", self.headers["Access-Control-Request-Headers"])
+        self.send_header('Access-Control-Allow-Methods',
+                         self.headers["Access-Control-Request-Method"])
+        self.send_header("Access-Control-Allow-Headers",
+                         self.headers["Access-Control-Request-Headers"])
         self.send_header(
             "Access-Control-Allow-Origin",
             'null' if self.headers["Origin"] is None
@@ -276,7 +289,8 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             if fname in ['', '/', '/*']:
                 modules = defaultdict(list)
                 for fname in DecoratedFunctions.all.keys():
-                    modules[DecoratedFunctions.all[fname].fun.__module__].append(fname)
+                    modules[DecoratedFunctions.all[fname].fun.__module__].append(
+                        fname)
 
                 html_out = f"""
                     <h1>Index of functions available in the API</h1><hr>
@@ -311,7 +325,8 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
 
             if fname not in DecoratedFunctions.all.keys():
                 send_header(self, 404, 'text/html')
-                self.wfile.write(f"{fname} : this function do not exists...".encode())
+                self.wfile.write(
+                    f"{fname} : this function do not exists...".encode())
                 return
             fun = DecoratedFunctions.all[fname].fun
             sig = html.escape(f"{fun.__name__}{inspect.signature(fun)}")
@@ -351,7 +366,8 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         # Check if the function the user want to call exists
         if parsed_url.path not in DecoratedFunctions.all.keys():
             send_header(self, 404, 'text/html')
-            self.wfile.write(f"{parsed_url.path} : this function do not exists...".encode())
+            self.wfile.write(
+                f"{parsed_url.path} : this function do not exists...".encode())
             return
 
         # Will be replaced by True id data loaded from pickle
