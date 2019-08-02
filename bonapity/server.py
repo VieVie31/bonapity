@@ -46,7 +46,6 @@ def send_header(server_instance, code, content_type):
         'GET, POST, PUT, DELETE, PATCH, OPTIONS'  # *?
     )
     server_instance.send_header("Access-Control-Allow-Credentials", 'true')
-    server_instance.send_header('Set-Cookie', f'BONAPITYSID={get_session_id(server_instance)}')
     server_instance.end_headers()
 
 
