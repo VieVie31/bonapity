@@ -21,7 +21,6 @@ from multiprocessing import Process, Manager
 
 from .code_generation import *
 from .decoration_classes import *
-from .session import SessionManager, get_session_id
 
 def send_header(server_instance, code, content_type):
     """
