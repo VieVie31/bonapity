@@ -11,99 +11,6 @@ from .decoration_classes import *
 __all__ = ["bonapity", "vuosi"]
 
 
-def serve(self, port=8888, help: bool=True, timeout: int=10, verbose: bool=True):
-    """
-    Serve your API forever.
-
-    :param port:
-        the port to serve the API
-    :param help:
-        return the documentation of functions at 
-        `http://[SERVER]/help/[FUN_NAME|ROOT]`
-    :param timeout: 
-        number of seconds before ending the function and returning 
-        timeout error message, if 0, no timeout is applied
-    :param verbose:
-        display some informations such as the port where the server w'll run
-
-    :type port: int
-    :type help: bool
-
-    Example :
-    ```
-    >>> bonapity.serve(8080)
-    Server running on  port : 8080
-    ```
-    """
-    PORT = port
-    server_address = ("", PORT)
-    handler = BonAppServer
-
-    if verbose:
-        print(f"Server running on  port : {PORT}")
-    
-    httpd = ThreadingBonAppServer(server_address, handler)
-
-    httpd.RequestHandlerClass.bonapity = self
-    httpd.RequestHandlerClass.help = help
-    httpd.RequestHandlerClass.port = port
-    httpd.RequestHandlerClass.default_timeout = timeout
-
-    httpd.serve_forever()
-
-def session(self):
-    raise NotImplementedError()
-
-
-def bonapity(fun=None, name: str=None, timeout: int=None):
-    """
-    Get a simple HTTP GET API with this simple decorator.
-    You'll be able to use your function at :
-    `http://[SERVER]/[FUN_NAME|ALIAS_NAME]?[PARAMETERS]`.
-
-    To start the server use the `serve` method.
-
-    :param fun: 
-        the function we want to create a simple api 
-        it's safer to use type hints for input args
-        we w'll cast the inputs for you
-        the types should be python generics ones
-    :param name:
-        rename this function in the api to conflict names
-    :param timeout:
-        timeout to kill the function
-
-    Example:
-    ```
-    >>> from bonapity import bonapity
-
-    >>> @bonapity      #or @bonapity('my_alias_fun_name')
-    ... def add(a: int, b: int=0) -> int:
-    ...     return a + b
-
-    >>> if __name__ == '__main__':
-    ...     bonapity.serve()
-    ```
-    """
-    if fun is None:
-        return functools.partial(
-            bonapity, name=name, timeout=timeout
-        )
-    elif type(fun) == str:
-        return functools.partial(
-            bonapity, name=fun, timeout=timeout
-        )
-
-    fname = fun.__name__ if not name else name
-    fname = f"{'' if fname[0] == '/' else '/'}{fname}"
-    DecoratedFunctions.all[fname] = BonapityDecoratedFunction(fun, timeout)
-
-    @functools.wraps(fun)
-    def f(*args, **kwargs):
-        return fun(*args, **kwargs)
-
-    return f
-
 def vuosi(domain: str, port: int):
     """
     Decorator for python clients to simplify the requests data transfert
@@ -153,6 +60,99 @@ def vuosi(domain: str, port: int):
     return inner_vuosi
 
 
-bonapity.serve = MethodType(serve, bonapity)
-bonapity.session = MethodType(session, bonapity)
+class BonAPIty:
+    @staticmethod
+    def serve(port=8888, help: bool=True, timeout: int=10, verbose: bool=True):
+        """
+        Serve your API forever.
+
+        :param port:
+            the port to serve the API
+        :param help:
+            return the documentation of functions at 
+            `http://[SERVER]/help/[FUN_NAME|ROOT]`
+        :param timeout: 
+            number of seconds before ending the function and returning 
+            timeout error message, if 0, no timeout is applied
+        :param verbose:
+            display some informations such as the port where the server w'll run
+
+        :type port: int
+        :type help: bool
+
+        Example :
+        ```
+        >>> bonapity.serve(8080)
+        Server running on  port : 8080
+        ```
+        """
+        PORT = port
+        server_address = ("", PORT)
+        handler = BonAppServer
+
+        if verbose:
+            print(f"Server running on  port : {PORT}")
+        
+        httpd = ThreadingBonAppServer(server_address, handler)
+
+        httpd.RequestHandlerClass.bonapity = BonAPIty
+        httpd.RequestHandlerClass.help = help
+        httpd.RequestHandlerClass.port = port
+        httpd.RequestHandlerClass.default_timeout = timeout
+
+        httpd.serve_forever()
+
+    @staticmethod
+    def __new__(cls, fun=None, name: str=None, timeout: int=None):
+        """
+        Get a simple HTTP GET API with this simple decorator.
+        You'll be able to use your function at :
+        `http://[SERVER]/[FUN_NAME|ALIAS_NAME]?[PARAMETERS]`.
+
+        To start the server use the `serve` method.
+
+        :param fun: 
+            the function we want to create a simple api 
+            it's safer to use type hints for input args
+            we w'll cast the inputs for you
+            the types should be python generics ones
+        :param name:
+            rename this function in the api to conflict names
+        :param timeout:
+            timeout to kill the function
+
+        Example:
+        ```
+        >>> from bonapity import bonapity
+
+        >>> @bonapity      #or @bonapity('my_alias_fun_name')
+        ... def add(a: int, b: int=0) -> int:
+        ...     return a + b
+
+        >>> if __name__ == '__main__':
+        ...     bonapity.serve()
+        ```
+        """
+        if fun is None:
+            return functools.partial(
+                BonAPIty.__new__, cls, name=name, timeout=timeout
+            )
+        elif type(fun) == str:
+            return functools.partial(
+                BonAPIty.__new__, cls, name=fun, timeout=timeout
+            )
+
+        fname = fun.__name__ if not name else name
+        fname = f"{'' if fname[0] == '/' else '/'}{fname}"
+        DecoratedFunctions.all[fname] = BonapityDecoratedFunction(fun, timeout)
+
+        @functools.wraps(fun)
+        def f(*args, **kwargs):
+            return fun(*args, **kwargs)
+
+        return f
+
+
+
+bonapity = BonAPIty
 
