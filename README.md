@@ -54,7 +54,7 @@ curl --data '{"a": 1, "b": 3}' -X PATCH  "http://localhost:8888/add" -H "Content
 curl --data '{"a": 1, "b": 3}' -X PUT    "http://localhost:8888/add" -H "Content-Type: application/json"
 ```
 
-### Looking your fist generated API function documentation
+### Looking your first generated API function documentation
 
 Generated documentation for your first function is available at this url : `http://localhost:8888/help/add`.
 
