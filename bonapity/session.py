@@ -4,9 +4,12 @@ This module contains all the mechanic for handling user session.
 @author: VieVie31
 """
 import time
+import random
+import hashlib
 import threading
 
 from collections import defaultdict
+from http.cookies import SimpleCookie
 
 
 class UserSession:
@@ -103,3 +106,26 @@ class SessionManager(metaclass=Singleton):
                   or len(self.sessions[sessionid].storage) == 0:
                 del self.sessions[sessionid]
     
+def make_session_id() -> str:
+    """
+    This function will return a random session id as a sha1 hash 
+    of the current timestamp concatened to a random number.
+    """
+    return hashlib.sha1(
+        (f'{time.time()}' + f'{random.randint(0, 1000)}').encode()
+    ).hexdigest()
+
+def get_session_id(server_instance) -> str:
+    """
+    If the `SESSIONID` is present in a cookie in the header, return it
+    else return a new one `with make_session_id`.
+
+    :param server_instance: the server instance where to find cookies
+    """
+    cookies = SimpleCookie(server_instance.headers.get('Cookie', failobj=''))
+    return (
+        cookies["BONAPITYSID"].value 
+        if "BONAPITYSID" in cookies 
+        else make_session_id()
+    )
+

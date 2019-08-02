@@ -120,7 +120,8 @@ generated wrapper but write your one instead.
 - [ ] add Session support
 - [ ] generate wrappers of all the functions available in API into a served JavaScript file to just have to include the link
 - [ ] same thing as previous one but with python
-- [x] refactorize code
+- [ ] rewrite code-generation for javascript as `fetch` do not handle cookies
+
 
 ## License [CC-BY](https://creativecommons.org/licenses/by/4.0/)
 
