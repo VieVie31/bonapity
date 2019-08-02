@@ -84,11 +84,6 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                or k == full_arg_spec.varkw
         ]
 
-        list(filter(
-            lambda k: sig.parameters[k].default != inspect._empty or k == full_arg_spec.varargs or k == full_arg_spec.varkw,
-            sig.parameters.keys()
-        ))
-
         if sorted(set(sig.parameters.keys()) - set(ignored_params_names)) \
                 != sorted(set(parameters.keys()) - set(ignored_params_names)):
             send_header(self, 400, 'text/html')
