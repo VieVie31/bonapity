@@ -40,5 +40,3 @@ def generate_python(fname: str, signature: str, doc: str, domain: str, port: int
     @vuosi('{str(domain)}', {port})
     def {signature}:\n\tpass
     """.replace("    ", '')
-
-

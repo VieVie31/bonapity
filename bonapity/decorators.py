@@ -3,13 +3,10 @@ This module contains all the functions which will be converted into decorators.
 
 @author: VieVie31, Ricocotam
 """
-import inspect
 import json
 import pickle
 import urllib
 import functools
-
-from types import MethodType
 
 from .server import ThreadingBonAppServer, BonAppServer
 from .decoration_classes import DecoratedFunctions, BonapityDecoratedFunction
@@ -28,8 +25,8 @@ def vuosi(domain: str, port: int):
     >>> @vuosi('localhost', 8888) # Specify the domain and the port
     >>> def myfun(a):
     ...     # Can create this function only if `/myfun?a=...` exists in the api
-    ...     pass # No body needed, the decorator will write/execute is for you 
-    
+    ...     pass # No body needed, the decorator will write/execute is for you
+
     >>> myfun('coucou cici')
     ```
     """
@@ -66,17 +63,17 @@ def vuosi(domain: str, port: int):
 
 class BonAPIty:
     @staticmethod
-    def serve(port=8888, help: bool=True, timeout: int=10, verbose: bool=True):
+    def serve(port=8888, help: bool = True, timeout: int = 10, verbose: bool = True):
         """
         Serve your API forever.
 
         :param port:
             the port to serve the API
         :param help:
-            return the documentation of functions at 
+            return the documentation of functions at
             `http://[SERVER]/help/[FUN_NAME|ROOT]`
-        :param timeout: 
-            number of seconds before ending the function and returning 
+        :param timeout:
+            number of seconds before ending the function and returning
             timeout error message, if 0, no timeout is applied
         :param verbose:
             display some informations such as the port where the server w'll run
@@ -96,7 +93,7 @@ class BonAPIty:
 
         if verbose:
             print(f"Server running on  port : {PORT}")
-        
+
         httpd = ThreadingBonAppServer(server_address, handler)
 
         httpd.RequestHandlerClass.bonapity = BonAPIty
@@ -107,7 +104,7 @@ class BonAPIty:
         httpd.serve_forever()
 
     @staticmethod
-    def __new__(cls, fun=None, name: str=None, timeout: int=None):
+    def __new__(cls, fun=None, name: str = None, timeout: int = None):
         """
         Get a simple HTTP GET API with this simple decorator.
         You'll be able to use your function at :
@@ -115,8 +112,8 @@ class BonAPIty:
 
         To start the server use the `serve` method.
 
-        :param fun: 
-            the function we want to create a simple api 
+        :param fun:
+            the function we want to create a simple api
             it's safer to use type hints for input args
             we w'll cast the inputs for you
             the types should be python generics ones
@@ -157,6 +154,4 @@ class BonAPIty:
         return f
 
 
-
 bonapity = BonAPIty
-

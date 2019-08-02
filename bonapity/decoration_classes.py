@@ -1,5 +1,5 @@
 """
-This module contains the classes used internally 
+This module contains the classes used internally
 to store and manage the decorated functions.
 
 @author: VieVie31
@@ -7,6 +7,7 @@ to store and manage the decorated functions.
 import typing
 
 from dataclasses import dataclass
+
 
 class DecoratedFunctions(object):
     """
@@ -17,6 +18,7 @@ class DecoratedFunctions(object):
     def __new__(cls):
         return DecoratedFunctions.all
 
+
 @dataclass
 class BonapityDecoratedFunction():
     """
@@ -24,4 +26,3 @@ class BonapityDecoratedFunction():
     """
     fun: typing.Callable
     timeout: int = 0
-
