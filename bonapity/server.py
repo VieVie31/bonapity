@@ -19,8 +19,8 @@ import socketserver
 from collections import defaultdict
 from multiprocessing import Process, Manager
 
-from .code_generation import *
-from .decoration_classes import *
+from .code_generation import generate_js, generate_python
+from .decoration_classes import DecoratedFunctions
 
 def send_header(server_instance, code, content_type):
     """
