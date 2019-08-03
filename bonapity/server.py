@@ -15,7 +15,9 @@ import http.server
 import urllib.parse
 import urllib.request
 import socketserver
+import os.path
 
+from pathlib import Path
 from collections import defaultdict
 from multiprocessing import Process, Manager
 
@@ -56,6 +58,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         self.help = True
         self.port = 80
         self.default_timeout = 1
+        self.static_files_dir = None
 
     def process(self, parameters, value_already_evaluated=False):
         """
@@ -276,9 +279,12 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
 
         parsed_url = urllib.parse.urlparse(self.path)
 
+        #TODO: if `/` check if index.something and serve it as root if not print index or help ?
+
         # Check to display the js lib
         if self.help and parsed_url.path.startswith('/help/') and parsed_url.query in ['lib=js', 'js']:
             send_header(self, 200, 'text/javascript')
+            #FIXME: replace localhost by the real ip, take is as parameter ?
             self.wfile.write(generate_js_lib('localhost', 8888).encode())
             return 
         # Check if display help
@@ -363,8 +369,36 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             self.wfile.write(html_out.encode())
             return
 
-        # Check if the function the user want to call exists
-        if parsed_url.path not in DecoratedFunctions.all.keys():
+        # If the function the user want to call do not exists 
+        # check if a file exists from the root `static_files_dir`
+        file_path = (Path(self.static_files_dir) / Path(parsed_url.path[1:])).absolute()
+        if parsed_url.path not in DecoratedFunctions.all.keys() and os.path.isfile(file_path):
+            # Serve the file
+            try:
+                with open(file_path, 'rb') as f:
+                    mine_types = {
+                        '.manifest': 'text/cache-manifest',
+                        '.html': 'text/html',
+                        '.png': 'image/png',
+                        '.jpg': 'image/jpg',
+                        '.svg':	'image/svg+xml',
+                        '.css':	'text/css',
+                        '.js':	'application/x-javascript',
+                        '': 'application/octet-stream'
+                    }
+                    if Path(file_path).suffix in mine_types:
+                        mine_type = mine_types[Path(file_path).suffix]
+                    else:
+                        mine_type = 'application/octet-stream'
+                    send_header(self, 200, mine_type)
+                    self.wfile.write(f.read())
+                    return
+            except Exception as e:
+                send_header(self, 500, 'text/html')
+                self.wfile.write(
+                    f"Error in serving file {file_path}: {e}".encode())
+                return
+        elif parsed_url.path not in DecoratedFunctions.all.keys():
             send_header(self, 404, 'text/html')
             self.wfile.write(
                 f"{parsed_url.path} : this function do not exists...".encode())
