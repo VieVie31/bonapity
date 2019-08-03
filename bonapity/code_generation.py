@@ -5,11 +5,13 @@ This module contains all stuffs about the automatic code generation.
 """
 import inspect
 import hashlib
+import functools
 
 from typing import List
 
 from .decoration_classes import DecoratedFunctions
 
+@functools.lru_cache(maxsize=1) # Build the lib once the cache it
 def generate_js_lib(domain: str, port: int, js_lib_name: str = "bonapity_api") -> str:
     # Generate the name for the requestCORS method such as there'll 
     # be no conflit with any other name of the user lib.
