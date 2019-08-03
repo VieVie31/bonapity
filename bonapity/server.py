@@ -16,10 +16,11 @@ import urllib.parse
 import urllib.request
 import socketserver
 import os.path
+import threading
+import queue
 
 from pathlib import Path
 from collections import defaultdict
-from multiprocessing import Process, Manager
 
 from .code_generation import generate_js, generate_python, generate_js_lib
 from .decoration_classes import DecoratedFunctions
@@ -191,39 +192,23 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                 f = functools.partial(f, **parameters[full_arg_spec.varkw])
 
             if timeout > 0.:
-                # Create shared variable wich will contain the result function
-                manager = Manager()
-                return_dict = manager.dict()
+                que = queue.Queue()
+                thr = threading.Thread(target=lambda q: q.put(f()), args=(que,))
+                thr.start()
+                thr.join(timeout)
 
-                def execute_and_save_result(fun, return_dict):
-                    # Ececute the tunction and store result in shared memory
-                    return_dict[0] = fun()
-
-                # Create a process
-                action_process = Process(
-                    target=execute_and_save_result,
-                    args=(f, return_dict)
-                )
-
-                # Start the process and we block for the required timeout
-                action_process.start()
-                action_process.join(timeout=timeout)
-
-                # Terminate the process
-                action_process.terminate()
-
-                if 0 in return_dict:
-                    # Get result from shared memory
-                    res = return_dict[0]
-                else:
+                if que.empty():
                     # Time out error
                     send_header(self, 500, 'text/html')
                     self.wfile.write(
                         f"""Timeout error: execution of {fun.__name__}
-                        took more than the {self.timeout} allowed seconds
+                        took more than the {timeout} allowed seconds
                         """.encode()
                     )
                     return
+                else:
+                    # Get result from the top of the queue
+                    res = que.get()
             else:
                 # No timeout constraint
                 res = f()
