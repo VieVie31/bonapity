@@ -19,7 +19,7 @@ import socketserver
 from collections import defaultdict
 from multiprocessing import Process, Manager
 
-from .code_generation import generate_js, generate_python
+from .code_generation import generate_js, generate_python, generate_js_lib
 from .decoration_classes import DecoratedFunctions
 
 
@@ -276,8 +276,13 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
 
         parsed_url = urllib.parse.urlparse(self.path)
 
+        # Check to display the js lib
+        if self.help and parsed_url.path.startswith('/help/') and parsed_url.query in ['lib=js', 'js']:
+            send_header(self, 200, 'text/javascript')
+            self.wfile.write(generate_js_lib('localhost', 8888).encode())
+            return 
         # Check if display help
-        if self.help and (parsed_url.path.startswith('/help/') or parsed_url.path in ['', '/']):
+        elif self.help and (parsed_url.path.startswith('/help/') or parsed_url.path in ['', '/']):
             fname = parsed_url.path[5:]
 
             # If no name given, make an index of all functions allowed in the API
