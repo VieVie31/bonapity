@@ -104,6 +104,13 @@ generated wrapper but write your one instead.
    The data received should be a binary pickled object (do not encode it in base64 for example) which will be loaded by pickle (python3, be aware of your pickle encoder version).
 - No other type of content is accepted (such as _application/x-www-form-urlencoded_), so, if you are using the `requests` module, be aware to not write `requests.post(url, data={...})` but `requests.post(url, json={...})` instead, or specifying the _Content-Type_ in the header.
 
+## Goodies
+
+By default, each served function will have an documentation page automatically build from your doctring and the signature of the function available at `http:/domain:port/help/myfunction`.
+
+Furthermore, to make your life easier when writting a JS client, we automatically generate wrapper of all your function into a single JS script you can include from this address: `http://domain:port/help/?js`. The generation is quite naïve and just an help, if you encounter difficulties with the generated lib, consider to writte wrappers for your spetial use cases your self.
+
+
 ## In Development
 
 > "I'll probably will do it, maybe definitely"
@@ -118,7 +125,7 @@ generated wrapper but write your one instead.
 - [x] make the server multi-threaded to be non blocking (non sequential, request after request)
 - [x] allow to put time limit execution on function to not be f*** by infinite loop or just too long function coupled with stupid/poorly intensionned user
 - [ ] add Session support
-- [x] generate wrappers of all the functions available in API into a served JavaScript file to just have to include the link
+- [x] generate wrappers of all the functions available in API into a served JavaScript file to just have to include the link (`http://localhost:8888/help/?js`)
 - [ ] same thing as previous one but with python
 - [ ] rewrite code-generation for javascript as `fetch` do not handle cookies
 
