@@ -60,6 +60,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         self.port = 80
         self.default_timeout = 1
         self.static_files_dir = None
+        self.index = None
 
     def process(self, parameters, value_already_evaluated=False):
         """
@@ -264,6 +265,9 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
 
         parsed_url = urllib.parse.urlparse(self.path)
 
+        # Extract domain, port from the client request (socket)
+        domain, port = self.request.getsockname()
+
         # Serve the index page if exists else display an error
         if self.index and parsed_url.path in ['', '/']:
             try:
@@ -275,14 +279,13 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             except Exception as e:
                 send_header(self, 500, 'text/html')
                 self.wfile.write(
-                    f"Error in serving index file {file_path}: {e}".encode())
+                    f"Error in serving index file {self.index}: {e}".encode())
                 return 
 
         # Check to display the js lib
         if self.help and parsed_url.path.startswith('/help/') and parsed_url.query in ['lib=js', 'js']:
             send_header(self, 200, 'text/javascript')
-            #FIXME: replace localhost by the real ip, take is as parameter ?
-            self.wfile.write(generate_js_lib('localhost', 8888).encode())
+            self.wfile.write(generate_js_lib(domain, port).encode())
             return 
         # Check if display help
         elif self.help and (parsed_url.path.startswith('/help/') or parsed_url.path in ['', '/']):
@@ -345,14 +348,14 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                     <details>
                         <summary><h3>Python Client</h3></summary>
                         <i><code style='display:block;white-space:pre-wrap'>{
-            generate_python(fname, sig, doc, 'localhost', self.port)
+            generate_python(fname, sig, doc, domain, port)
             }</code></i>
                         <br/>Remeber, all arguments are now nammed...
                     </details>
                     <details>
                         <summary><h3>Javascrit</h3></summary>
                         <i><code style='display:block;white-space:pre-wrap'>{
-            generate_js(fname, list(inspect.signature(fun).parameters.keys()), 'localhost', self.port)
+            generate_js(fname, list(inspect.signature(fun).parameters.keys()), domain, port)
             }</code></i>
                         <br/>Remember to use <tt>await</tt>...
                     </details>
