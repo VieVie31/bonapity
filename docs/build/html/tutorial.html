@@ -1,0 +1,336 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Tutorial &mdash; bonapity 0.1.14 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="contents.html" class="icon icon-home"> bonapity
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">Tutorial</a><ul>
+<li><a class="reference internal" href="#seriously-it-s-only-3-lines">Seriously ! it’s only 3 Lines</a></li>
+<li><a class="reference internal" href="#first-sample">First Sample</a></li>
+<li><a class="reference internal" href="#how-my-data-is-sent-received">How my data is sent / received ?</a></li>
+<li><a class="reference internal" href="#we-help-you-to-write-the-client-too">We help you to write the client too !</a><ul>
+<li><a class="reference internal" href="#python-wrappers">Python wrappers</a></li>
+<li><a class="reference internal" href="#javascript-wrappers">Javascript wrappers</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#more-examples-soon">More examples soon…</a></li>
+</ul>
+</li>
+</ul>
+</div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="contents.html">bonapity</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="contents.html">Docs</a> &raquo;</li>
+        
+      <li>Tutorial</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/tutorial.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="tutorial">
+<h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
+<p>This chapter provide a quick tutorial on how to use <code class="docutils literal notranslate"><span class="pre">bonapity</span></code> easily.</p>
+<p>First let’s install the latest version of bonapity with <code class="docutils literal notranslate"><span class="pre">pip</span></code> :</p>
+<div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip3</span> <span class="n">install</span> <span class="n">bonapity</span>
+</pre></div>
+</div>
+<div class="section" id="seriously-it-s-only-3-lines">
+<h2>Seriously ! it’s only 3 Lines<a class="headerlink" href="#seriously-it-s-only-3-lines" title="Permalink to this headline">¶</a></h2>
+<p>You can create a cool API for your project by knowing only three lines !</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># The import line</span>
+<span class="kn">from</span> <span class="nn">bonapity</span> <span class="k">import</span> <span class="n">bonapity</span>
+
+<span class="c1"># The decorator</span>
+<span class="nd">@bonapity</span>
+
+<span class="c1"># Starting the server</span>
+<span class="n">bonapity</span><span class="o">.</span><span class="n">serve</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Honestly, I can’t do simpler !</p>
+</div>
+<div class="section" id="first-sample">
+<h2>First Sample<a class="headerlink" href="#first-sample" title="Permalink to this headline">¶</a></h2>
+<p>Sounds incredible ? Let’s try it by yourself, open a python terminal and let’s write our first API.</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">bonapity</span> <span class="k">import</span> <span class="n">bonapity</span>
+
+<span class="nd">@bonapity</span>
+<span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="s2">&quot;This function add two integers&quot;</span>
+    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">bonapity</span><span class="o">.</span><span class="n">serve</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The server should be running, open your browser and write <code class="docutils literal notranslate"><span class="pre">http://localhost:8888/</span></code> into your url bar.
+By default, the server will return you the listing of all your functions usable throught the API.</p>
+<img alt="listing of all your functions" src="_images/first_api_index.png" />
+<p>Here, there is only one function : <code class="docutils literal notranslate"><span class="pre">add</span></code>.
+You want, for each function, know the signature and the purpose ?
+Ok, just click on the link, it will bring you to <code class="docutils literal notranslate"><span class="pre">/help/FUNCTION_NAME</span></code> where a generated doctumentation is served too.</p>
+<img alt="help of the add function" src="_images/first_api_add_help.png" />
+<p>Now you can test it by giving parameters throught the url sur as :
+<code class="docutils literal notranslate"><span class="pre">http://localhost:8888/add?a=23&amp;b=19</span></code>.</p>
+<p>But you can test all the <code class="docutils literal notranslate"><span class="pre">REST</span></code> verbs with the <code class="docutils literal notranslate"><span class="pre">curl</span></code> command :</p>
+<div class="code bash highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">curl</span> <span class="o">-</span><span class="n">X</span> <span class="n">GET</span> <span class="s2">&quot;http://localhost:8888/add?a=1&amp;b=3&quot;</span>
+<span class="n">curl</span> <span class="o">-</span><span class="n">X</span> <span class="n">DELETE</span> <span class="s2">&quot;http://localhost:8888/add?a=1&amp;b=3&quot;</span>
+<span class="n">curl</span> <span class="o">--</span><span class="n">data</span> <span class="s1">&#39;{&quot;a&quot;: 1, &quot;b&quot;: 3}&#39;</span> <span class="o">-</span><span class="n">X</span> <span class="n">POST</span>   <span class="s2">&quot;http://localhost:8888/add&quot;</span> <span class="o">-</span><span class="n">H</span> <span class="s2">&quot;Content-Type: application/json&quot;</span>
+<span class="n">curl</span> <span class="o">--</span><span class="n">data</span> <span class="s1">&#39;{&quot;a&quot;: 1, &quot;b&quot;: 3}&#39;</span> <span class="o">-</span><span class="n">X</span> <span class="n">PATCH</span>  <span class="s2">&quot;http://localhost:8888/add&quot;</span> <span class="o">-</span><span class="n">H</span> <span class="s2">&quot;Content-Type: application/json&quot;</span>
+<span class="n">curl</span> <span class="o">--</span><span class="n">data</span> <span class="s1">&#39;{&quot;a&quot;: 1, &quot;b&quot;: 3}&#39;</span> <span class="o">-</span><span class="n">X</span> <span class="n">PUT</span>    <span class="s2">&quot;http://localhost:8888/add&quot;</span> <span class="o">-</span><span class="n">H</span> <span class="s2">&quot;Content-Type: application/json&quot;</span>
+</pre></div>
+</div>
+<p>Great ! you did it ! want to know more ? ok, let’s continue reading… 📚</p>
+</div>
+<div class="section" id="how-my-data-is-sent-received">
+<h2>How my data is sent / received ?<a class="headerlink" href="#how-my-data-is-sent-received" title="Permalink to this headline">¶</a></h2>
+<p>Your function expect parameters, for <code class="docutils literal notranslate"><span class="pre">GET</span></code> and <code class="docutils literal notranslate"><span class="pre">DELETE</span></code> they can be passed :</p>
+<ul class="simple">
+<li>as a query string (url parameters), each parameter is considered as a JSON,
+so you can give list or dictionnary to each parameter.
+Example:  <code class="docutils literal notranslate"><span class="pre">/myfun?param1=value1&amp;param2=value2</span></code>.</li>
+<li>as a serialized pickle binary of the dict with keys as argument names
+and values as values, in this case, the url should not contains any argument
+value, the only argument (without value) is your binary pickle
+encoded in <code class="docutils literal notranslate"><span class="pre">base64</span></code> (<code class="docutils literal notranslate"><span class="pre">/myfun?MY_BASE64_ENCODED_DATA</span></code>).
+Example: the equivalent of <code class="docutils literal notranslate"><span class="pre">/myfun?v=23</span></code> would be
+<code class="docutils literal notranslate"><span class="pre">/myfun?gAN9cQBYAQAAAHZxAUsXcy4=</span></code> because <code class="docutils literal notranslate"><span class="pre">gAN9cQBYAQAAAHZxAUsXcy4=</span></code> is
+the base64 of <code class="docutils literal notranslate"><span class="pre">\x80\x03}q\x00X\x01\x00\x00\x00vq\x01K\x17s.</span></code> which is
+the pickle dump of <code class="docutils literal notranslate"><span class="pre">{'v':</span> <span class="pre">23}</span></code>.</li>
+</ul>
+<p>For <code class="docutils literal notranslate"><span class="pre">POST</span></code>, <code class="docutils literal notranslate"><span class="pre">PUT</span></code>, <code class="docutils literal notranslate"><span class="pre">PATCH</span></code>, you can give them :</p>
+<ul class="simple">
+<li>as a JSON dict</li>
+<li>as a binary (<strong>not</strong> base64 encoded this time) file</li>
+</ul>
+<p>For both case you should precise the <code class="docutils literal notranslate"><span class="pre">Content-Type</span></code> in the header.</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">&quot;Content-Type:</span> <span class="pre">application/json&quot;</span></code> for JSON file</li>
+<li><code class="docutils literal notranslate"><span class="pre">&quot;Content-Type:</span> <span class="pre">application/python-pickle&quot;</span></code> for pickle file</li>
+</ul>
+<p>Be aware that pickle encoding differ between <code class="docutils literal notranslate"><span class="pre">python2</span></code> and <code class="docutils literal notranslate"><span class="pre">python3</span></code>,
+we are using <code class="docutils literal notranslate"><span class="pre">python3</span></code>.</p>
+<p>The received data (for all <code class="docutils literal notranslate"><span class="pre">REST</span></code> verbs) are, by default returned as JSON
+if they are JSON serializable, else as binary pickle.
+If you need to write a javascript client, think that your function can’t
+return numpy array (for example) as they are not JSON serializable and javascript
+do not understand the pickle format.</p>
+</div>
+<div class="section" id="we-help-you-to-write-the-client-too">
+<h2>We help you to write the client too !<a class="headerlink" href="#we-help-you-to-write-the-client-too" title="Permalink to this headline">¶</a></h2>
+<p>You don’t have time to create a complex client ? we help you to write it too.
+For python client we provide a simple decorator and for javascript
+we generate a template lib served at <code class="docutils literal notranslate"><span class="pre">http://domain:port/help/?js</span></code>.
+The generation is quite naïve and just an help,
+if you encounter difficulties with the generated lib, consider
+to writte wrappers for your spetial use cases your self.</p>
+<div class="section" id="python-wrappers">
+<h3>Python wrappers<a class="headerlink" href="#python-wrappers" title="Permalink to this headline">¶</a></h3>
+<p>Let’s write the client part for our of <code class="docutils literal notranslate"><span class="pre">add</span></code> function.</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">bonapity</span> <span class="k">import</span> <span class="n">vuosi</span>
+
+<span class="nd">@vuosi</span><span class="p">(</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="mi">8888</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p>You just have to import our <code class="docutils literal notranslate"><span class="pre">vuosi</span></code> decorator and write empty function
+with the same signature as the server one.
+So, the decorator will understand which one to use.
+The wrapped <code class="docutils literal notranslate"><span class="pre">add</span></code> function should be called with the parameter names
+(not positional) : <code class="docutils literal notranslate"><span class="pre">add(a=4,</span> <span class="pre">b=5)</span></code> is valid, but <code class="docutils literal notranslate"><span class="pre">add(6,</span> <span class="pre">2)</span></code> is not.</p>
+</div>
+<div class="section" id="javascript-wrappers">
+<h3>Javascript wrappers<a class="headerlink" href="#javascript-wrappers" title="Permalink to this headline">¶</a></h3>
+<p>Here we go ! With Cross-Origin-Requests, AJAX, etc. JS can be painful !
+Also, we decided to generate some code to help you to make link with the API.
+For example, if you go to : <code class="docutils literal notranslate"><span class="pre">http://domain:port/help/?js</span></code> you can see the code.</p>
+<img alt="generated js lib example" src="_images/jslib_generated.png" />
+<p>The function are contained in a dict, by default, the dict name is  <code class="docutils literal notranslate"><span class="pre">bonapity_api</span></code>.
+Think to replace the <code class="docutils literal notranslate"><span class="pre">domain</span></code> and <code class="docutils literal notranslate"><span class="pre">port</span></code> attributes.</p>
+<p>Because it’s easier to get results from promises than putting functions inside
+functions (if success to something), we decided to generate all the function as
+asynchrounous ones.
+So it’s pretty simple to call it. Just use the <a href="#id1"><span class="problematic" id="id2">``</span></a>await``keyword. Example :</p>
+<div class="code javascript highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">var</span> <span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="n">add</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">12</span><span class="p">);</span>
+<span class="n">console</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="more-examples-soon">
+<h2>More examples soon…<a class="headerlink" href="#more-examples-soon" title="Permalink to this headline">¶</a></h2>
+<p>Stay tuned !</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Olivier RISSER-MAROIX
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
