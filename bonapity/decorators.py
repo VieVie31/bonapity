@@ -63,7 +63,7 @@ def vuosi(domain: str, port: int):
 
 class BonAPIty:
     @staticmethod
-    def serve(port=8888, static_files_dir:str='./', help: bool = True, timeout: int = 10, verbose: bool = True):
+    def serve(port=8888, static_files_dir:str='./', index: str=None, help: bool = True, timeout: int = 10, verbose: bool = True):
         """
         Serve your API forever.
 
@@ -75,6 +75,8 @@ class BonAPIty:
             prefer absolute path, less ambiguous (
                 else depend of the current position of python
                 ) => less problems
+        :param index:
+            if not None, use this page as index (returned as html)
         :param help:
             return the documentation of functions at
             `http://[SERVER]/help/[FUN_NAME|ROOT]`
@@ -103,10 +105,13 @@ class BonAPIty:
         httpd = ThreadingBonAppServer(server_address, handler)
 
         httpd.RequestHandlerClass.bonapity = BonAPIty
-        httpd.RequestHandlerClass.help = help
         httpd.RequestHandlerClass.port = port
-        httpd.RequestHandlerClass.default_timeout = timeout
+        
         httpd.RequestHandlerClass.static_files_dir = static_files_dir
+        httpd.RequestHandlerClass.index = index
+        httpd.RequestHandlerClass.help = help
+        httpd.RequestHandlerClass.default_timeout = timeout
+        
 
         httpd.serve_forever()
 

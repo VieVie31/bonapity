@@ -264,7 +264,19 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
 
         parsed_url = urllib.parse.urlparse(self.path)
 
-        #TODO: if `/` check if index.something and serve it as root if not print index or help ?
+        # Serve the index page if exists else display an error
+        if self.index and parsed_url.path in ['', '/']:
+            try:
+                # self.index is assumed to be an html file
+                with open(self.index, 'rb') as f:
+                    send_header(self, 200, 'text/html')
+                    self.wfile.write(f.read())
+                    return
+            except Exception as e:
+                send_header(self, 500, 'text/html')
+                self.wfile.write(
+                    f"Error in serving index file {file_path}: {e}".encode())
+                return 
 
         # Check to display the js lib
         if self.help and parsed_url.path.startswith('/help/') and parsed_url.query in ['lib=js', 'js']:
