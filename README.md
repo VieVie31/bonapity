@@ -1,6 +1,6 @@
 # 👀 README 👀
 
-`bonAPIty` is a python3 package allowing you to create simple API (GET) for your functions without writing any complicated line of server code and it is even simpler than Flask !  
+`bonAPIty` is a python3 package allowing you to create simple API (REST) for your functions without writing any complicated line of server code and it is even simpler than Flask !  
 
 You are the 👨‍🍳, just do what you do the best: cook code ! Do not lose your time to 💁, we do it for you :).  
 
