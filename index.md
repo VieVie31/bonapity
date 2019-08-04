@@ -126,8 +126,9 @@ Furthermore, to make your life easier when writting a JS client, we automaticall
 - [x] allow to put time limit execution on function to not be f*** by infinite loop or just too long function coupled with stupid/poorly intensionned user
 - [ ] add Session support
 - [x] generate wrappers of all the functions available in API into a served JavaScript file to just have to include the link (`http://localhost:8888/help/?js`)
-- [ ] same thing as previous one but with python
-- [ ] rewrite code-generation for javascript as `fetch` do not handle cookies
+- [x] rewrite code-generation for javascript as `fetch` do not handle cookies
+- [ ] Travis testing
+- [ ] Complete documentation and publish on a website
 
 
 ## License [CC-BY](https://creativecommons.org/licenses/by/4.0/)
