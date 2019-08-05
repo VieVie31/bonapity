@@ -24,6 +24,7 @@ from collections import defaultdict
 
 from .code_generation import generate_js, generate_python, generate_js_lib
 from .decoration_classes import DecoratedFunctions
+from .session import SessionManager, get_session_id
 
 
 def send_header(server_instance, code, content_type):
@@ -50,6 +51,7 @@ def send_header(server_instance, code, content_type):
         'GET, POST, PUT, DELETE, PATCH, OPTIONS'  # *?
     )
     server_instance.send_header("Access-Control-Allow-Credentials", 'true')
+    server_instance.send_header('Set-Cookie', f'BONAPITYSID={get_session_id(server_instance)}')
     server_instance.end_headers()
 
 
