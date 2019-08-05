@@ -15,13 +15,16 @@ import http.server
 import urllib.parse
 import urllib.request
 import socketserver
+import os.path
+import threading
+import queue
 
+from pathlib import Path
 from collections import defaultdict
-from multiprocessing import Process, Manager
 
-from .code_generation import *
-from .decoration_classes import *
-from .session import SessionManager, get_session_id
+from .code_generation import generate_js, generate_python, generate_js_lib
+from .decoration_classes import DecoratedFunctions
+
 
 def send_header(server_instance, code, content_type):
     """
@@ -47,7 +50,6 @@ def send_header(server_instance, code, content_type):
         'GET, POST, PUT, DELETE, PATCH, OPTIONS'  # *?
     )
     server_instance.send_header("Access-Control-Allow-Credentials", 'true')
-    server_instance.send_header('Set-Cookie', f'BONAPITYSID={get_session_id(server_instance)}')
     server_instance.end_headers()
 
 
@@ -57,6 +59,8 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         self.help = True
         self.port = 80
         self.default_timeout = 1
+        self.static_files_dir = None
+        self.index = None
 
     def process(self, parameters, value_already_evaluated=False):
         """
@@ -75,19 +79,21 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         if timeout is None:
             timeout = self.default_timeout
 
-        # Check if parameters names matches 
+        # Check if parameters names matches
         # (and ignore default and *args, **kargs parameters)
         full_arg_spec = inspect.getfullargspec(fun)
-        ignored_params_names = list(filter(
-            lambda k: sig.parameters[k].default != inspect._empty or \
-                      k == full_arg_spec.varargs or k == full_arg_spec.varkw,
-            sig.parameters.keys()
-        ))
+        ignored_params_names = [
+            k for k in sig.parameters.keys()
+            if sig.parameters[k].default != inspect._empty
+               or k == full_arg_spec.varargs
+               or k == full_arg_spec.varkw
+        ]
 
         if sorted(set(sig.parameters.keys()) - set(ignored_params_names)) \
                 != sorted(set(parameters.keys()) - set(ignored_params_names)):
             send_header(self, 400, 'text/html')
-            self.wfile.write(b"Parameters names do not match the signature of the function...")
+            self.wfile.write(
+                b"Parameters names do not match the signature of the function...")
             return
 
         # try
@@ -131,7 +137,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
 
                 # Try to cast
                 if ftype == inspect._empty:
-                    # No typing 
+                    # No typing
                     # just affect the parsed value
                     parameters[param_key] = param_value
                 else:
@@ -144,19 +150,21 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                         typing.Tuple[(ftype.__args__[0],) if '__args__' in ftype.__dict__ else None]: tuple(),
                         typing.Set[(ftype.__args__[0],) if '__args__' in ftype.__dict__ else None]: set(),
                         typing.FrozenSet[(ftype.__args__[0],) if '__args__' in ftype.__dict__ else None]: frozenset(),
-                        typing.Dict[ftype.__args__ if '__args__' in ftype.__dict__ and len(ftype.__args__) == 2 else (
-                        None, None)]: dict()
+                        typing.Dict[ftype.__args__ if '__args__' in ftype.__dict__ and len(
+                            ftype.__args__) == 2 else (None, None)]: dict()
                     }
                     if ftype in supported_generic_types:
                         # Cast the generic type
                         try:
-                            parameters[param_key] = type(supported_generic_types[ftype])(param_value)
+                            parameters[param_key] = type(
+                                supported_generic_types[ftype])(param_value)
                         except Exception as e:
                             send_header(self, 500, 'application/json')
-                            self.wfile.write(f"Error on parameter `{param_key}` : {e}".encode())
+                            self.wfile.write(
+                                f"Error on parameter `{param_key}` : {e}".encode())
                             return
                     else:
-                        # Not a generic python type : 
+                        # Not a generic python type :
                         # just affect the parsed value
                         parameters[param_key] = param_value
             else:
@@ -165,9 +173,9 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
 
         # Add the missing default parameters if not filled
         for k in sig.parameters.keys():
-            if not k in parameters:
+            if k not in parameters:
                 parameters[k] = sig.parameters[k].default
-        
+
         # Execute the function or die
         try:
             # Fill the first positional arguments in the right order
@@ -177,47 +185,31 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             )
 
             # Fill the *args if any
-            if full_arg_spec.varargs != None and len(full_arg_spec.varargs):
+            if full_arg_spec.varargs is not None and len(full_arg_spec.varargs):
                 f = functools.partial(f, *parameters[full_arg_spec.varargs])
 
             # Fill the **kargs if any
-            if full_arg_spec.varkw != None and len(full_arg_spec.varkw):
+            if full_arg_spec.varkw is not None and len(full_arg_spec.varkw):
                 f = functools.partial(f, **parameters[full_arg_spec.varkw])
 
             if timeout > 0.:
-                # Create shared variable wich will contain the result function
-                manager = Manager()
-                return_dict = manager.dict()
+                que = queue.Queue()
+                thr = threading.Thread(target=lambda q: q.put(f()), args=(que,))
+                thr.start()
+                thr.join(timeout)
 
-                def execute_and_save_result(fun, return_dict):
-                    # Ececute the tunction and store result in shared memory
-                    return_dict[0] = fun()
-
-                # Create a process
-                action_process = Process(
-                    target=execute_and_save_result, 
-                    args=(f, return_dict)
-                )
-
-                # Start the process and we block for the required timeout
-                action_process.start()
-                action_process.join(timeout=timeout)
-
-                # Terminate the process
-                action_process.terminate()
-
-                if 0 in return_dict:
-                    # Get result from shared memory
-                    res = return_dict[0]
-                else:
+                if que.empty():
                     # Time out error
                     send_header(self, 500, 'text/html')
                     self.wfile.write(
-                        f"""Timeout error: execution of {fun.__name__} 
-                        took more than the {self.timeout} allowed seconds
+                        f"""Timeout error: execution of {fun.__name__}
+                        took more than the {timeout} allowed seconds
                         """.encode()
                     )
                     return
+                else:
+                    # Get result from the top of the queue
+                    res = que.get()
             else:
                 # No timeout constraint
                 res = f()
@@ -256,8 +248,10 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         # Send back informations for complex POST
         self.send_response(200, "ok")
-        self.send_header('Access-Control-Allow-Methods', self.headers["Access-Control-Request-Method"])
-        self.send_header("Access-Control-Allow-Headers", self.headers["Access-Control-Request-Headers"])
+        self.send_header('Access-Control-Allow-Methods',
+                         self.headers["Access-Control-Request-Method"])
+        self.send_header("Access-Control-Allow-Headers",
+                         self.headers["Access-Control-Request-Headers"])
         self.send_header(
             "Access-Control-Allow-Origin",
             'null' if self.headers["Origin"] is None
@@ -271,15 +265,38 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
 
         parsed_url = urllib.parse.urlparse(self.path)
 
+        # Extract domain, port from the client request (socket)
+        domain, port = self.request.getsockname()
+
+        # Serve the index page if exists else display an error
+        if self.index and parsed_url.path in ['', '/']:
+            try:
+                # self.index is assumed to be an html file
+                with open(self.index, 'rb') as f:
+                    send_header(self, 200, 'text/html')
+                    self.wfile.write(f.read())
+                    return
+            except Exception as e:
+                send_header(self, 500, 'text/html')
+                self.wfile.write(
+                    f"Error in serving index file {self.index}: {e}".encode())
+                return 
+
+        # Check to display the js lib
+        if self.help and parsed_url.path.startswith('/help/') and parsed_url.query in ['lib=js', 'js']:
+            send_header(self, 200, 'text/javascript')
+            self.wfile.write(generate_js_lib(domain, port).encode())
+            return 
         # Check if display help
-        if self.help and (parsed_url.path.startswith('/help/') or parsed_url.path in ['', '/']):
+        elif self.help and (parsed_url.path.startswith('/help/') or parsed_url.path in ['', '/']):
             fname = parsed_url.path[5:]
 
             # If no name given, make an index of all functions allowed in the API
             if fname in ['', '/', '/*']:
                 modules = defaultdict(list)
                 for fname in DecoratedFunctions.all.keys():
-                    modules[DecoratedFunctions.all[fname].fun.__module__].append(fname)
+                    modules[DecoratedFunctions.all[fname].fun.__module__].append(
+                        fname)
 
                 html_out = f"""
                     <h1>Index of functions available in the API</h1><hr>
@@ -299,7 +316,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                     for m in modules
                 ])}
                     <div style="position:absolute;bottom:5;right:5;">
-                    <hr><footer>Auto generated by 
+                    <hr><footer>Auto generated by
                     ★ <a href='https://github.com/VieVie31/bonapity'>bonAPIty</a> ★
                     </footer></div>
                 """
@@ -312,9 +329,10 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                 self.wfile.write(b'')
                 return
 
-            if not fname in DecoratedFunctions.all.keys():
+            if fname not in DecoratedFunctions.all.keys():
                 send_header(self, 404, 'text/html')
-                self.wfile.write(f"{fname} : this function do not exists...".encode())
+                self.wfile.write(
+                    f"{fname} : this function do not exists...".encode())
                 return
             fun = DecoratedFunctions.all[fname].fun
             sig = html.escape(f"{fun.__name__}{inspect.signature(fun)}")
@@ -325,25 +343,25 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                 <div><h2>Description : </h2><code style='display:block;white-space:pre-wrap'>{doc}</code></div><hr>
                 <div>
                     <h2>Generated Code</h2>
-                    Code auto-generated to use as template for client if 
+                    Code auto-generated to use as template for client if
                     you don't want to code the exchanges yourserlf...
                     <details>
                         <summary><h3>Python Client</h3></summary>
                         <i><code style='display:block;white-space:pre-wrap'>{
-            generate_python(fname, sig, doc, 'localhost', self.port)
+            generate_python(fname, sig, doc, domain, port)
             }</code></i>
                         <br/>Remeber, all arguments are now nammed...
                     </details>
                     <details>
                         <summary><h3>Javascrit</h3></summary>
                         <i><code style='display:block;white-space:pre-wrap'>{
-            generate_js(fname, list(inspect.signature(fun).parameters.keys()), 'localhost', self.port)
+            generate_js(fname, list(inspect.signature(fun).parameters.keys()), domain, port)
             }</code></i>
                         <br/>Remember to use <tt>await</tt>...
                     </details>
                 </div>
                 <div style="position:absolute;bottom:5;right:5;">
-                <hr><footer>Auto generated by 
+                <hr><footer>Auto generated by
                 ★ <a href='https://github.com/VieVie31/bonapity'>bonAPIty</a> ★
                 </footer></div>
             """
@@ -351,10 +369,39 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             self.wfile.write(html_out.encode())
             return
 
-        # Check if the function the user want to call exists
-        if not parsed_url.path in DecoratedFunctions.all.keys():
+        # If the function the user want to call do not exists 
+        # check if a file exists from the root `static_files_dir`
+        file_path = (Path(self.static_files_dir) / Path(parsed_url.path[1:])).absolute()
+        if parsed_url.path not in DecoratedFunctions.all.keys() and os.path.isfile(file_path):
+            # Serve the file
+            try:
+                with open(file_path, 'rb') as f:
+                    mine_types = {
+                        '.manifest': 'text/cache-manifest',
+                        '.html': 'text/html',
+                        '.png': 'image/png',
+                        '.jpg': 'image/jpg',
+                        '.svg':	'image/svg+xml',
+                        '.css':	'text/css',
+                        '.js':	'application/x-javascript',
+                        '': 'application/octet-stream'
+                    }
+                    if Path(file_path).suffix in mine_types:
+                        mine_type = mine_types[Path(file_path).suffix]
+                    else:
+                        mine_type = 'application/octet-stream'
+                    send_header(self, 200, mine_type)
+                    self.wfile.write(f.read())
+                    return
+            except Exception as e:
+                send_header(self, 500, 'text/html')
+                self.wfile.write(
+                    f"Error in serving file {file_path}: {e}".encode())
+                return
+        elif parsed_url.path not in DecoratedFunctions.all.keys():
             send_header(self, 404, 'text/html')
-            self.wfile.write(f"{parsed_url.path} : this function do not exists...".encode())
+            self.wfile.write(
+                f"{parsed_url.path} : this function do not exists...".encode())
             return
 
         # Will be replaced by True id data loaded from pickle
@@ -372,12 +419,12 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                     self.wfile.write(
                         b"""
                         The encoded pickled object should be a dict (key: str, value)
-                        with the name of argument as key and the corresponding 
+                        with the name of argument as key and the corresponding
                         data as value, all keys should be strings...
                         """
                     )
                     return
-                # Prepare parameters to be in the same format as 
+                # Prepare parameters to be in the same format as
                 # if processed by url : `{"key": [value(s)], ...}`
                 parameters = {k: [parameters[k]] for k in parameters}
                 value_already_evaluated = True
@@ -413,15 +460,15 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             except:
                 send_header(self, 400, 'text/html')
                 self.wfile.write(
-                    b"""Content type : application/python-pickle expect pickle binary object... 
-                    we failed to load it, check your input... 
+                    b"""Content type : application/python-pickle expect pickle binary object...
+                    we failed to load it, check your input...
                     (maybe wrong version of pickle), we use python3...")
                     """
                 )
         else:
             send_header(self, 400, 'text/html')
             self.wfile.write(
-                f"""Bad Content-Type : {self.headers['Content-Type']}, 
+                f"""Bad Content-Type : {self.headers['Content-Type']},
                 accepted CT are : application/json, application/python-pickle.
                 """.encode())
             return
@@ -436,18 +483,17 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
 
     def do_DELETE(self):
         self.do_GET()
-    
+
     def do_PUT(self):
         self.do_POST()
-    
+
     def do_PATCH(self):
         self.do_POST()
 
+
 class ThreadingBonAppServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
     """
-    This class will make the server multi-threaded, 
+    This class will make the server multi-threaded,
     allowing him to execute simulatneoulsy several client requests.
     """
     pass
-
-

@@ -4,11 +4,10 @@ See documentation with : `help(bonapity)`.
 
 @author: VieVie31
 """
-from .decorators import *
+from .decorators import bonapity, vuosi
 
-__version_info__ = (0, 1, 11)
+__version_info__ = (0, 1, 16)
 __version__ = '.'.join(map(str, __version_info__))
-__author__ = "Olivier RISSER-MAROIX (VieVie31)"
+__author__ = "Olivier RISSER-MAROIX (VieVie31)\nAdrien POUYET (Ricocotam)"
 
 __all__ = ["bonapity", "vuosi"]
-

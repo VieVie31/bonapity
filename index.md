@@ -1,6 +1,6 @@
 # 👀 README 👀
 
-`bonAPIty` is a python (3.7) ackage allowing you to create simple API (REST) for your functions without writing any complicated line of server code and it is much simpler than Flask !  
+`bonAPIty` is a python (3.7) package allowing you to create simple API (REST) for your functions without writing any complicated line of server code and it is much simpler than Flask !  
 
 You are the 👨‍🍳, just do what you do the best: cook code ! Do not lose your time to 💁, we do it for you :).  
 
@@ -124,18 +124,11 @@ Furthermore, to make your life easier when writting a JS client, we automaticall
 - [x] Handle the others commands of the REST API standard : `PUT`, `DELETE`, `PATCH`
 - [x] make the server multi-threaded to be non blocking (non sequential, request after request)
 - [x] allow to put time limit execution on function to not be f*** by infinite loop or just too long function coupled with stupid/poorly intensionned user
-<<<<<<< HEAD
-- [ ] add Session support -- WIP
-- [ ] generate wrappers of all the functions available in API into a served JavaScript file to just have to include the link
-- [ ] same thing as previous one but with python
-- [ ] rewrite code-generation for javascript as `fetch` do not handle cookies
-=======
 - [ ] add Session support
 - [x] generate wrappers of all the functions available in API into a served JavaScript file to just have to include the link (`http://localhost:8888/help/?js`)
 - [x] rewrite code-generation for javascript as `fetch` do not handle cookies
 - [ ] Travis testing
 - [ ] Complete documentation and publish on a website
->>>>>>> master
 
 
 ## License [CC-BY](https://creativecommons.org/licenses/by/4.0/)

@@ -1,0 +1,3 @@
+bonapity
+numpy
+requests
