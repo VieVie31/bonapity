@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>bonapity demo - Fisher's Iris</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="https://www.w3schools.com/lib/w3-theme-teal.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!-- import the generated bonapity js script -->
+    <script type="text/javascript" src="./help/?js"></script>
+    <style>
+        .hcenter {
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .tabName {
+            margin-top: 5vh;
+            width: 75vw;
+        }
+    </style>
+</head>
+<body>
+
+<nav >
+    <div class="w3-bar w3-theme w3-xlarge">
+        <span class="w3-bar-item">Fisher's Iris</span>
+        <a class="w3-bar-item w3-button w3-right" href="http://github.com/VieVie31/bonapity"><i>code</i></a>
+    </div>
+    <div class="w3-bar w3-black">
+        <button class="w3-bar-item w3-button tablink w3-purple" onclick="changeTab(event,'predict')">Predict</button>
+        <button class="w3-bar-item w3-button tablink" onclick="changeTab(event,'retrain')">Retrain</button>
+    </div>
+</nav>
+
+<div id="predict" class="w3-container hcenter tabName">
+    <label>Sepal Length</label>
+    <input id="feat_sl" class="w3-input" type="number" placeholder="... cm">
+    <label>Sepal Width</label>
+    <input id="feat_sw" class="w3-input" type="number" placeholder="... cm">
+    <label>Sepal Length</label>
+    <input id="feat_pl" class="w3-input" type="number" placeholder="... cm">
+    <label>Petal Width</label>
+    <input id="feat_pw" class="w3-input" type="number" placeholder="... cm">
+
+    <div class="w3-center" style="margin-top: 5vh;">
+        <button onclick="predict_input()" class="w3-button w3-black w3-large w3-wide">Predict</button>
+    </div>
+    <div id="predict_iris" class="w3-modal w3-animate-opacity">
+        <div class="w3-modal-content" style="width:25vw">
+            <div class="w3-container; margin: 0;">
+                <span onclick="document.getElementById('predict_iris').style.display='none'" class="w3-button w3-display-topright w3-red">&times;</span>
+                
+                <div class="w3-purple hcenter" style="width:25vw;">
+                    <img id="iris_img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Blue_Flag%2C_Ottawa.jpg/220px-Blue_Flag%2C_Ottawa.jpg" alt="Predicted Iris image" style="width:100%"/>
+                    <div class="w3-container">
+                        <h4><b><center id="iris_class">Versicolor</center></b></h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="retrain" class="w3-container hcenter tabName" style="display:none">
+    <label>How Many Trees ?</label>
+    <input id="nb_trees" class="w3-input" type="number" value="10" min="1" max="100" placeholder="...">
+
+    <div class="w3-center" style="margin-top: 5vh;">
+        <button onclick="retrain()" class="w3-button w3-black w3-large w3-wide">Retrain</button>
+    </div>
+
+    <div id="accuracy_modal" class="w3-modal w3-animate-zoom">
+        <div class="w3-modal-content" style="width: 20vw;">
+            <div class="w3-container">
+                <span onclick="document.getElementById('accuracy_modal').style.display='none'" class="w3-button w3-display-topright w3-red">&times;</span>
+                <h3 class="hcenter">Acuracy : <span id="accuracy" class="w3-animate-zoom">50</span>%</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    async function predict_input() {
+        /**
+         * Call the bonapity API to predict 
+         * the class of the iris with the given features
+         */
+        const iris_class_predicted = await bonapity_api.predict_one_sample(
+            document.getElementById("feat_sl").value,
+            document.getElementById("feat_sw").value,
+            document.getElementById("feat_pl").value,
+            document.getElementById("feat_pw").value
+        )
+        console.log(iris_class_predicted)
+
+        document.getElementById("iris_img").src = [
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Kosaciec_szczecinkowaty_Iris_setosa.jpg/220px-Kosaciec_szczecinkowaty_Iris_setosa.jpg",
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Blue_Flag%2C_Ottawa.jpg/220px-Blue_Flag%2C_Ottawa.jpg",
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Iris_virginica_2.jpg/220px-Iris_virginica_2.jpg"
+        ][iris_class_predicted];
+        document.getElementById("iris_class").innerText = [
+            'Setosa', 'Versicolor', 'Virginica'
+        ][iris_class_predicted];
+        document.getElementById('predict_iris').style.display = 'block';
+    }
+
+    async function retrain() {
+        /**
+         * Call the bonapity API to retrain the model 
+         * and display the new accuracy in a modal window
+         */
+        const accuracy_element = document.getElementById('accuracy');
+        const accuracy_modal_element = document.getElementById('accuracy_modal');
+
+        await bonapity_api.retrain(document.getElementById("nb_trees").value);
+        accuracy_element.innerHTML = (await bonapity_api.model_acc()) * 100;
+
+        accuracy_element.style.display = 'inline';
+        accuracy_modal_element.style.display = 'block';
+    }
+
+    function changeTab(evt, tabName) {
+        var i, x, tablinks;
+        x = document.getElementsByClassName("tabName");
+        for (i = 0; i < x.length; i++)
+            x[i].style.display = "none";
+        tablinks = document.getElementsByClassName("tablink");
+        for (i = 0; i < x.length; i++)
+            tablinks[i].className = tablinks[i].className.replace(" w3-purple", "");
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.className += " w3-purple";
+    }
+</script>
+</body>
+</html>
