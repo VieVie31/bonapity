@@ -26,3 +26,10 @@ class BonapityDecoratedFunction():
     """
     fun: typing.Callable
     timeout: int = 0
+
+class BonapityException(Exception):
+    """
+    Bonapity Exception, usefull for the `vuosi` decorator to differentiate 
+    exceptions from `bonapity` (server communication for example) from others.
+    """
+    pass

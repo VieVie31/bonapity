@@ -9,7 +9,7 @@ import urllib
 import functools
 
 from .server import ThreadingBonAppServer, BonAppServer
-from .decoration_classes import DecoratedFunctions, BonapityDecoratedFunction
+from .decoration_classes import DecoratedFunctions, BonapityDecoratedFunction, BonapityException
 
 __all__ = ["bonapity", "vuosi"]
 
@@ -43,8 +43,8 @@ def vuosi(domain: str, port: int):
                 data=params,
                 headers={"Content-Type": "application/python-pickle"}
             ))
-            if r.status != 200:
-                raise Exception(
+            if r.status >= 300:
+                raise BonapityException(
                     f"Failed to fetch result, code : [{r.status}], message : {r.read()}"
                 )
             res = r.read()
