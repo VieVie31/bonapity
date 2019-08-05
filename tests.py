@@ -9,14 +9,20 @@ import time
 import queue
 import threading
 
+import json
 import pickle
 import typing
 import functools
+
+import urllib
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from bonapity import bonapity
 from bonapity.server import BonAppServer
+
+DOMAIN = 'localhost'
+PORT = 8888
 
 # Define a bunch of bonapity function to test
 
@@ -94,11 +100,29 @@ def execute_function_with_timeout(fun, timeout=2):
 def send_as_url_query(fun_api_name, data):
     raise NotImplementedError()
 
-def send_as_json(fun_api_name, data):
+def send_as_get_json(fun_api_name, data):
     raise NotImplementedError()
 
-def send_as_pickle(fun_api_name, data):
+def send_as_post_json(fun_api_name, data):
     raise NotImplementedError()
+
+def send_as_post_pickle(fun_api_name, params):
+    params = pickle.dumps(params)
+    r = urllib.request.urlopen(urllib.request.Request(
+        f'http://{DOMAIN}:{PORT}/{fun_api_name.__name__}',
+        data=params,
+        headers={"Content-Type": "application/python-pickle"}
+    ))
+    if r.status != 200:
+        raise Exception(
+            f"Failed to fetch result, code : [{r.status}], message : {r.read()}"
+        )
+    res = r.read()
+    try:
+        res = pickle.loads(res)
+    except:
+        res = json.loads(res.decode())
+    return res
 
 
 # Define the test cases
@@ -111,17 +135,23 @@ class TestBonAppServer(unittest.TestCase):
     def test_send_as_url_query(self):
         raise NotImplementedError()
     
-    def test_send_as_json(self):
+    def test_send_as_get_json(self):
+        raise NotImplementedError()
+
+    def test_send_as_post_json(self):
         raise NotImplementedError()
     
-    def send_as_pickle(self):
-        raise NotADirectoryError()
+    def test_send_as_post_pickle(self):
+        assert send_as_post_pickle(test_no_param, {}) == test_no_param()
+        assert send_as_post_pickle(test_add, {'a': 4, 'b': 5}) == test_add(4, 5)
+        assert send_as_post_pickle(test_concatenate, {'a': 'cou', 'b': 'cou'}) == test_concatenate('cou', 'cou')
+        #TODO: complete
 
 
 if __name__ == '__main__':
     # Start the test server in a parallel thread
     bonapity_partial_serve_function = functools.partial(
-        bonapity.serve, **{'port': 8889, 'timeout': 5})
+        bonapity.serve, **{'port': PORT, 'timeout': 5})
     bonapity_server_thread = threading.Thread(
         target=bonapity_partial_serve_function)
     bonapity_server_thread.start()
