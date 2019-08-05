@@ -20,9 +20,10 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from bonapity import bonapity
 from bonapity.server import BonAppServer
+from bonapity.decoration_classes import BonapityException
 
 DOMAIN = 'localhost'
-PORT = 8888
+PORT = 8889
 
 # Define a bunch of bonapity function to test
 
@@ -40,12 +41,12 @@ def test_concatenate(a: str, b: str) -> str:
 
 @bonapity
 def test_sum_list_int(L: typing.List[int]) -> int:
-    return sum(test_sum_list_int)
+    return sum(L)
 
 @bonapity(timeout=1)
 def test_timeout_crash():
     time.sleep(2)
-    return False
+    return True
 
 @bonapity(timeout=0)
 def test_no_timeout():
@@ -132,7 +133,7 @@ class TestBonAppServer(unittest.TestCase):
     Test the different data input/output of BonAppServer
     """
 
-    def test_send_as_url_query(self):
+    """def test_send_as_url_query(self):
         raise NotImplementedError()
     
     def test_send_as_get_json(self):
@@ -140,12 +141,25 @@ class TestBonAppServer(unittest.TestCase):
 
     def test_send_as_post_json(self):
         raise NotImplementedError()
-    
+    """
     def test_send_as_post_pickle(self):
         assert send_as_post_pickle(test_no_param, {}) == test_no_param()
         assert send_as_post_pickle(test_add, {'a': 4, 'b': 5}) == test_add(4, 5)
         assert send_as_post_pickle(test_concatenate, {'a': 'cou', 'b': 'cou'}) == test_concatenate('cou', 'cou')
-        #TODO: complete
+        assert send_as_post_pickle(test_concatenate, {'a': 2, 'b': 3}) == test_concatenate('2', '3')
+        assert send_as_post_pickle(test_sum_list_int, {'L': [1, 2, 3]}) == test_sum_list_int([1, 2, 3])
+        assert send_as_post_pickle(test_no_timeout, {})
+        assert send_as_post_pickle(test_default_arg, {}) == test_default_arg()
+        assert send_as_post_pickle(
+            test_args_kargs, {'a': (1, 2, 3), 'k': {'a': 1, 'b': 2}}
+        ) == test_args_kargs(*(1, 2, 3), a=1, b=2)
+        # TODO: implement tests on the following functions
+        #test_timeout_crash
+        #test_return_json_serializable_object
+        #test_return_non_json_serializable_type
+        #test_changing_fname
+
+
 
 
 if __name__ == '__main__':
