@@ -116,7 +116,7 @@ class BonAPIty:
         httpd.serve_forever()
 
     @staticmethod
-    def __new__(cls, fun=None, name: str = None, timeout: int = None):
+    def __new__(cls, fun=None, name: str = None, timeout: int = None, custom_mine_type: str = None):
         """
         Get a simple HTTP GET API with this simple decorator.
         You'll be able to use your function at :
@@ -133,6 +133,10 @@ class BonAPIty:
             rename this function in the api to conflict names
         :param timeout:
             timeout to kill the function
+        :param custom_mine_type:
+            specity your return mine-type if you want to return 
+            custom data such as binary images. If content-type 
+            given, the function is assumed returning byte data.
 
         Example:
         ```
@@ -148,16 +152,19 @@ class BonAPIty:
         """
         if fun is None:
             return functools.partial(
-                BonAPIty.__new__, cls, name=name, timeout=timeout
+                BonAPIty.__new__, cls, name=name, timeout=timeout, 
+                custom_mine_type=custom_mine_type
             )
         elif type(fun) == str:
             return functools.partial(
-                BonAPIty.__new__, cls, name=fun, timeout=timeout
+                BonAPIty.__new__, cls, name=fun, timeout=timeout,
+                custom_mine_type=custom_mine_type
             )
 
         fname = fun.__name__ if not name else name
         fname = f"{'' if fname[0] == '/' else '/'}{fname}"
-        DecoratedFunctions.all[fname] = BonapityDecoratedFunction(fun, timeout)
+        DecoratedFunctions.all[fname] = BonapityDecoratedFunction(
+            fun, timeout, custom_mine_type)
 
         @functools.wraps(fun)
         def f(*args, **kwargs):

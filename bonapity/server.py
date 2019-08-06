@@ -81,6 +81,9 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         if timeout is None:
             timeout = self.default_timeout
 
+        # Get mine-type
+        mine_type = DecoratedFunctions.all[parsed_url.path].mine_type
+
         # Check if parameters names matches
         # (and ignore default and *args, **kargs parameters)
         full_arg_spec = inspect.getfullargspec(fun)
@@ -199,13 +202,16 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                 thr = threading.Thread(target=lambda q: q.put(f()), args=(que,))
                 thr.start()
                 thr.join(timeout)
+                
+                #TODO: differentiate timeout form function crash
 
                 if que.empty():
                     # Time out error
                     send_header(self, 500, 'text/html')
                     self.wfile.write(
                         f"""Timeout error: execution of {fun.__name__}
-                        took more than the {timeout} allowed seconds
+                        took more than the {timeout} allowed seconds 
+                        or function crashed... (see server logs)
                         """.encode()
                     )
                     return
@@ -215,6 +221,19 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             else:
                 # No timeout constraint
                 res = f()
+
+            # If a mine-type is given, return as is (byte data assumed)
+            if mine_type is not None:
+                # Check if data is in byte format
+                if type(res) != type(b''):
+                    send_header(self, 500, 'text/html')
+                    self.wfile.write(
+                        f"{fun.__name__} didn't returned byte data but :{str(res)[:100]}...".encode())
+                    return
+                # The data are bytes
+                send_header(self, 200, str(mine_type))
+                self.wfile.write(res)
+                return
 
             # Ecode result in JSON
             try:
