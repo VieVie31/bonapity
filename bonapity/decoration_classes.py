@@ -26,7 +26,7 @@ class BonapityDecoratedFunction():
     """
     fun: typing.Callable
     timeout: int = 0
-    mine_type: str = None
+    mime_type: str = "auto"
 
 class BonapityException(Exception):
     """

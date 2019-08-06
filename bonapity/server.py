@@ -24,6 +24,7 @@ from collections import defaultdict
 
 from .code_generation import generate_js, generate_python, generate_js_lib
 from .decoration_classes import DecoratedFunctions
+from .mime import extension_to_mime, byte_to_mime
 
 
 def send_header(server_instance, code, content_type):
@@ -79,8 +80,8 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         if timeout is None:
             timeout = self.default_timeout
 
-        # Get mine-type
-        mine_type = DecoratedFunctions.all[parsed_url.path].mine_type
+        # Get mime-type
+        mime_type = DecoratedFunctions.all[parsed_url.path].mime_type
 
         # Check if parameters names matches
         # (and ignore default and *args, **kargs parameters)
@@ -220,8 +221,8 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                 # No timeout constraint
                 res = f()
 
-            # If a mine-type is given, return as is (byte data assumed)
-            if mine_type is not None:
+            # If a mime-type is given, return as is (byte data assumed)
+            if not mime_type in [None, "auto"]:
                 # Check if data is in byte format
                 if type(res) != type(b''):
                     send_header(self, 500, 'text/html')
@@ -229,7 +230,22 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                         f"{fun.__name__} didn't returned byte data but :{str(res)[:100]}...".encode())
                     return
                 # The data are bytes
-                send_header(self, 200, str(mine_type))
+                send_header(self, 200, str(mime_type))
+                self.wfile.write(res)
+                return
+            elif mime_type in [None, "auto"] and type(res) == type(b''):
+                suffix = Path(parsed_url.path).suffix
+                if suffix:
+                    print(suffix)
+                    # If extension provided in file name detect from if
+                    mime_type = extension_to_mime(suffix)
+                else:
+                    # Try to infer mine-type from 16 first bytes (enought)
+                    # else return "application/octet-stream"
+                    mime_type = byte_to_mime(res[:16])
+                    #raise NotImplementedError()
+                # The data are bytes
+                send_header(self, 200, str(mime_type))
                 self.wfile.write(res)
                 return
 
@@ -392,24 +408,11 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         # check if a file exists from the root `static_files_dir`
         file_path = (Path(self.static_files_dir) / Path(parsed_url.path[1:])).absolute()
         if parsed_url.path not in DecoratedFunctions.all.keys() and os.path.isfile(file_path):
-            # Serve the file
+            # Serve the file 
             try:
                 with open(file_path, 'rb') as f:
-                    mine_types = {
-                        '.manifest': 'text/cache-manifest',
-                        '.html': 'text/html',
-                        '.png': 'image/png',
-                        '.jpg': 'image/jpg',
-                        '.svg':	'image/svg+xml',
-                        '.css':	'text/css',
-                        '.js':	'application/x-javascript',
-                        '': 'application/octet-stream'
-                    }
-                    if Path(file_path).suffix in mine_types:
-                        mine_type = mine_types[Path(file_path).suffix]
-                    else:
-                        mine_type = 'application/octet-stream'
-                    send_header(self, 200, mine_type)
+                    mime_type = extension_to_mime(Path(file_path).suffix)
+                    send_header(self, 200, mime_type)
                     self.wfile.write(f.read())
                     return
             except Exception as e:
