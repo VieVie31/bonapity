@@ -16,6 +16,10 @@ def extension_to_mime(extension: str) -> str:
     mime_type = {
         '.manifest': 'text/cache-manifest',
         '.html': 'text/html',
+        '.htm': 'text/html',
+        '.xhtml': 'application/xhtml+xml',
+        '.xml': 'application/xml',
+        '.json': 'application/json',
         '.png': 'image/png',
         '.jpg': 'image/jpeg',
         '.gif': 'image/gif',
@@ -29,12 +33,17 @@ def extension_to_mime(extension: str) -> str:
         '.zip': 'application/zip',
         '.rar': 'application/x-rar-compressed',
         '.csv': 'text/csv',
+        '.avi': 'video/x-msvideo',
         '.mp4': 'video/mp4',
         '.mp3': 'audio/mpeg',
         '.wav': 'audio/x-wav',
         '.ogg': 'application/ogg',
         '.flac': 'audio/flac',
+        '.webp': 'image/webp',
+        '.webm': 'video/webm',
+        '.weba': 'video/webm',
         '.pdf': 'application/pdf',
+        '.torrent': 'application/x-bittorrent',
         '.': 'application/octet-stream',
         '': 'application/octet-stream'
     }
@@ -55,6 +64,10 @@ def byte_to_mime(byte_data: bytes) -> str:
     # RAR
     # 52 61 72 21 1A 07 00
     # 52 61 72 21 1A 07 01 00
+    if byte_data[:5] == b'<html':
+        return 'text/html'
+    elif byte_data[:5] == b'<?xml':
+        return 'application/xml'
     f4bytes = byte_data[:4] # first 4 bytes
     f4_mime_type = {
         b'\x89PNG': 'image/png',
