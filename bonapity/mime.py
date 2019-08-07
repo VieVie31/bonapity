@@ -64,11 +64,20 @@ def byte_to_mime(byte_data: bytes) -> str:
     # RAR
     # 52 61 72 21 1A 07 00
     # 52 61 72 21 1A 07 01 00
-    if byte_data[:5] == b'<html':
-        return 'text/html'
-    elif byte_data[:5] == b'<?xml':
-        return 'application/xml'
-    f4bytes = byte_data[:4] # first 4 bytes
+
+    # Check in decreasing order of the magic number
+    # byte length the potential application
+
+    if byte_data[:11] == b'd8:announce':
+        return 'application/x-bittorrent'
+    
+    f5_mime_type = {
+        b'<html': 'text/html',
+        b'<?xml': 'application/xml'
+    }
+    if byte_data[:5] in f5_mime_type:
+        return f5_mime_type[byte_data[:5]]
+    
     f4_mime_type = {
         b'\x89PNG': 'image/png',
         b'GIF8': 'image/gif',
@@ -88,15 +97,23 @@ def byte_to_mime(byte_data: bytes) -> str:
         b'\x1aE\xdf\xa3': 'video/x-matroska',
         b'\x00asm': 'application/wasm',
         b'\x00\x00\x01\xb3': 'audio/mpeg',
-        b'\x00\x00\x01\xba': 'audio/mpeg'
+        b'\x00\x00\x01\xba': 'audio/mpeg',
+        b'AVI ': 'video/x-msvideo'
     }
-    if f4bytes in f4_mime_type:
-        return f4_mime_type[f4bytes]
+    if byte_data[:4] in f4_mime_type:
+        return f4_mime_type[byte_data[:4]]
+    
+    f3_mime_type = {
+        b'ID3': 'audio/mpeg',
+        b'RIF': 'video/x-msvideo'
+    }
+    if byte_data[:3] in f3_mime_type:
+        return f3_mime_type[byte_data[:3]]
+    
     # 42 4D #BMP
     # FF FB #MP3
-    # 49 44 33 #MP3
-    # 52 49 46 #AVI
     # 46 ?? ?? ?? ?? #AVI
-    # 41 56 49 20 #AVI
+
+    # Unknown magic number case
     return "application/octet-stream"
 
