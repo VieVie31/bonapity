@@ -8,6 +8,7 @@ from collections import defaultdict
 
 
 # Complete list : http://www.iana.org/assignments/media-types/media-types.xhtml
+# TODO: parse this : https://www.freeformatter.com/mime-types-list.html
 COMMON_MIME_TYPES = {
     '': 'application/octet-stream',
     '.': 'application/octet-stream',
