@@ -13,43 +13,44 @@ def extension_to_mime(extension: str) -> str:
 
     :param extension: extension of the file formated as ".myextension"
     """
+    # Non-exhaustive lists :
+   	# * https://developer.mozilla.org/fr/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Complete_list_of_MIME_types
     mime_type = {
-        '.manifest': 'text/cache-manifest',
-        '.html': 'text/html',
+        '': 'application/octet-stream',
+        '.': 'application/octet-stream',
+        '.avi': 'video/x-msvideo',
+        '.bmp': 'image/bmp',
+        '.css': 'text/css',
+        '.csv': 'text/csv',
+        '.flac': 'audio/flac',
+        '.gif': 'image/gif',
         '.htm': 'text/html',
+        '.html': 'text/html',
+        '.ico': 'image/x-icon',
+        '.jpg': 'image/jpeg',
+        '.js': 'application/javascript',
+        '.json': 'application/json',
+        '.manifest': 'text/cache-manifest',
+        '.mp3': 'audio/mpeg',
+        '.mp4': 'video/mp4',
+        '.ogg': 'application/ogg',
+        '.pdf': 'application/pdf',
+        '.png': 'image/png',
+        '.rar': 'application/x-rar-compressed',
+        '.svg': 'image/svg+xml',
+        '.tif': 'image/tiff',
+        '.torrent': 'application/x-bittorrent',
+        '.wav': 'audio/x-wav',
+        '.weba': 'video/webm',
+        '.webm': 'video/webm',
+        '.webp': 'image/webp',
         '.xhtml': 'application/xhtml+xml',
         '.xml': 'application/xml',
-        '.json': 'application/json',
-        '.png': 'image/png',
-        '.jpg': 'image/jpeg',
-        '.gif': 'image/gif',
-        '.webp': 'image/webp',
-        '.tif': 'image/tiff',
-        '.bmp': 'image/bmp',
-        '.ico': 'image/x-icon',
-        '.svg':	'image/svg+xml',
-        '.css':	'text/css',
-        '.js':	'application/javascript',
-        '.zip': 'application/zip',
-        '.rar': 'application/x-rar-compressed',
-        '.csv': 'text/csv',
-        '.avi': 'video/x-msvideo',
-        '.mp4': 'video/mp4',
-        '.mp3': 'audio/mpeg',
-        '.wav': 'audio/x-wav',
-        '.ogg': 'application/ogg',
-        '.flac': 'audio/flac',
-        '.webp': 'image/webp',
-        '.webm': 'video/webm',
-        '.weba': 'video/webm',
-        '.pdf': 'application/pdf',
-        '.torrent': 'application/x-bittorrent',
-        '.': 'application/octet-stream',
-        '': 'application/octet-stream'
+        '.zip': 'application/zip'
     }
     if extension in mime_type:
         return mime_type[extension]
-    else: 
+    else:
         return 'application/octet-stream'
 
 
