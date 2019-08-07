@@ -236,7 +236,6 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             elif mime_type in [None, "auto"] and type(res) == type(b''):
                 suffix = Path(parsed_url.path).suffix
                 if suffix:
-                    print(suffix)
                     # If extension provided in file name detect from if
                     mime_type = extension_to_mime(suffix)
                 else:
