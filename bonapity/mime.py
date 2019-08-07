@@ -123,7 +123,8 @@ def byte_to_mime(byte_data: bytes) -> str:
 
     f5_mime_type = {
         b'<html': 'text/html',
-        b'<?xml': 'application/xml'
+        b'<?xml': 'application/xml',
+        b'%PDF-': 'application/pdf'
     }
     if byte_data[:5] in f5_mime_type:
         return f5_mime_type[byte_data[:5]]
