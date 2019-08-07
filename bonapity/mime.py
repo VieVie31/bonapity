@@ -6,6 +6,52 @@ This module contains useful function to infer mime-type.
 from pathlib import Path
 from collections import defaultdict
 
+
+# https://developer.mozilla.org/fr/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Complete_list_of_MIME_types
+COMMON_MIME_TYPES = {
+    '': 'application/octet-stream',
+    '.': 'application/octet-stream',
+    '.aac': 'audio/aac',
+    '.abx': 'application/x-abiword',
+    '.arc': 'application/octet-stream',
+    '.avi': 'video/x-msvideo',
+    '.azw': 'application/vnd.amazon.ebook',
+    '.bin': 'application/octet-stream',
+    '.bmp': 'image/bmp',
+    '.bz': 'application/x-bzip',
+    '.bz2': 'application/x-bzip2',
+    '.csh': 'application/x-csh',
+    '.css': 'text/css',
+    '.csv': 'text/csv',
+    '.doc': 'application/msword',
+    '.flac': 'audio/flac',
+    '.gif': 'image/gif',
+    '.htm': 'text/html',
+    '.html': 'text/html',
+    '.ico': 'image/x-icon',
+    '.jpg': 'image/jpeg',
+    '.js': 'application/javascript',
+    '.json': 'application/json',
+    '.manifest': 'text/cache-manifest',
+    '.mp3': 'audio/mpeg',
+    '.mp4': 'video/mp4',
+    '.ogg': 'application/ogg',
+    '.pdf': 'application/pdf',
+    '.png': 'image/png',
+    '.rar': 'application/x-rar-compressed',
+    '.svg': 'image/svg+xml',
+    '.tif': 'image/tiff',
+    '.torrent': 'application/x-bittorrent',
+    '.wav': 'audio/x-wav',
+    '.weba': 'video/webm',
+    '.webm': 'video/webm',
+    '.webp': 'image/webp',
+    '.xhtml': 'application/xhtml+xml',
+    '.xml': 'application/xml',
+    '.zip': 'application/zip'
+}
+
+
 def extension_to_mime(extension: str) -> str:
     """
     Return mime-type associated to a given extension.
@@ -13,43 +59,10 @@ def extension_to_mime(extension: str) -> str:
 
     :param extension: extension of the file formated as ".myextension"
     """
-    # Non-exhaustive lists :
-   	# * https://developer.mozilla.org/fr/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Complete_list_of_MIME_types
-    mime_type = {
-        '': 'application/octet-stream',
-        '.': 'application/octet-stream',
-        '.avi': 'video/x-msvideo',
-        '.bmp': 'image/bmp',
-        '.css': 'text/css',
-        '.csv': 'text/csv',
-        '.flac': 'audio/flac',
-        '.gif': 'image/gif',
-        '.htm': 'text/html',
-        '.html': 'text/html',
-        '.ico': 'image/x-icon',
-        '.jpg': 'image/jpeg',
-        '.js': 'application/javascript',
-        '.json': 'application/json',
-        '.manifest': 'text/cache-manifest',
-        '.mp3': 'audio/mpeg',
-        '.mp4': 'video/mp4',
-        '.ogg': 'application/ogg',
-        '.pdf': 'application/pdf',
-        '.png': 'image/png',
-        '.rar': 'application/x-rar-compressed',
-        '.svg': 'image/svg+xml',
-        '.tif': 'image/tiff',
-        '.torrent': 'application/x-bittorrent',
-        '.wav': 'audio/x-wav',
-        '.weba': 'video/webm',
-        '.webm': 'video/webm',
-        '.webp': 'image/webp',
-        '.xhtml': 'application/xhtml+xml',
-        '.xml': 'application/xml',
-        '.zip': 'application/zip'
-    }
-    if extension in mime_type:
-        return mime_type[extension]
+    global COMMON_MIME_TYPES
+
+    if extension in COMMON_MIME_TYPES:
+        return COMMON_MIME_TYPES[extension]
     else:
         return 'application/octet-stream'
 
@@ -61,7 +74,7 @@ def byte_to_mime(byte_data: bytes) -> str:
 
     :param extension: extension of the file formated as ".myextension"
     """
-    #https://en.wikipedia.org/wiki/List_of_file_signatures
+    # https://en.wikipedia.org/wiki/List_of_file_signatures
     # RAR
     # 52 61 72 21 1A 07 00
     # 52 61 72 21 1A 07 01 00
@@ -71,14 +84,14 @@ def byte_to_mime(byte_data: bytes) -> str:
 
     if byte_data[:11] == b'd8:announce':
         return 'application/x-bittorrent'
-    
+
     f5_mime_type = {
         b'<html': 'text/html',
         b'<?xml': 'application/xml'
     }
     if byte_data[:5] in f5_mime_type:
         return f5_mime_type[byte_data[:5]]
-    
+
     f4_mime_type = {
         b'\x89PNG': 'image/png',
         b'GIF8': 'image/gif',
@@ -103,14 +116,14 @@ def byte_to_mime(byte_data: bytes) -> str:
     }
     if byte_data[:4] in f4_mime_type:
         return f4_mime_type[byte_data[:4]]
-    
+
     f3_mime_type = {
         b'ID3': 'audio/mpeg',
         b'RIF': 'video/x-msvideo'
     }
     if byte_data[:3] in f3_mime_type:
         return f3_mime_type[byte_data[:3]]
-    
+
     # 42 4D #BMP
     # FF FB #MP3
     # 46 ?? ?? ?? ?? #AVI
@@ -118,3 +131,6 @@ def byte_to_mime(byte_data: bytes) -> str:
     # Unknown magic number case
     return "application/octet-stream"
 
+
+if __name__ == '__main__':
+	pass
