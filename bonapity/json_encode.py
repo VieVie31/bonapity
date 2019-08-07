@@ -112,3 +112,13 @@ def transform_python_sets(_set) -> typing.Tuple[typing.List, bool]:
 #TODO: transform other generic types such as sets, dates
 # or complex ones such as plots
     
+class BonapityJSONEncoder(json.JSONEncoder):
+    """
+    This class inherit from json.JSONEncoder and can be used as bellow :
+    ```python
+    >>> json.dumps(myobject, cls=BonapityJSONEncoder)
+    ```
+    """
+    def default(self, obj):
+        return ObjectToJSONizable.resolve(obj)
+
