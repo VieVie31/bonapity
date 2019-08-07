@@ -7,7 +7,7 @@ from pathlib import Path
 from collections import defaultdict
 
 
-# https://developer.mozilla.org/fr/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Complete_list_of_MIME_types
+# Complete list : http://www.iana.org/assignments/media-types/media-types.xhtml
 COMMON_MIME_TYPES = {
     '': 'application/octet-stream',
     '.': 'application/octet-stream',
@@ -24,31 +24,66 @@ COMMON_MIME_TYPES = {
     '.css': 'text/css',
     '.csv': 'text/csv',
     '.doc': 'application/msword',
+    '.doc': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    '.eot': 'application/vnd.ms-fontobject',
+    '.epub': 'application/epub+zip',
     '.flac': 'audio/flac',
     '.gif': 'image/gif',
     '.htm': 'text/html',
     '.html': 'text/html',
     '.ico': 'image/x-icon',
+    '.ics': 'text/calendar',
+    '.jar': 'application/java-archive',
+    '.jpeg': 'image/jpeg',
     '.jpg': 'image/jpeg',
     '.js': 'application/javascript',
     '.json': 'application/json',
     '.manifest': 'text/cache-manifest',
+    '.mid': 'audio/midi',
+    '.midi': 'audio/midi',
+    '.mpeg': 'video/mpeg',
+    '.mpgk': 'application/vnd.apple.installer+xml',
     '.mp3': 'audio/mpeg',
     '.mp4': 'video/mp4',
+    '.odp': 'application/vnd.oasis.opendocument.presentation',
+    '.ods': 'application/vnd.oasis.opendocument.spreadsheet',
+    '.odt': 'application/vnd.oasis.opendocument.text',
+    '.oga': 'audio/ogg',
     '.ogg': 'application/ogg',
+    '.ogv': 'video/ogg',
+    '.ogx': 'application/ogg',
+    '.otf': 'font/otf',
     '.pdf': 'application/pdf',
     '.png': 'image/png',
+    '.ppt': 'application/vnd.ms-powerpoint',
+    '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     '.rar': 'application/x-rar-compressed',
+    '.rtf': 'application/rtf',
+    '.sh': 'application/x-sh',
     '.svg': 'image/svg+xml',
+    '.swf': 'application/x-shockwave-flash',
+    '.tar': 'application/x-tar',
     '.tif': 'image/tiff',
+    '.tiff': 'image/tiff',
     '.torrent': 'application/x-bittorrent',
+    '.ts': 'application/typescript',
+    '.ttf': 'font/ttf',
+    '.vsd': 'application/vnd.visio',
     '.wav': 'audio/x-wav',
     '.weba': 'video/webm',
     '.webm': 'video/webm',
     '.webp': 'image/webp',
+    '.woff': 'font/woff',
+    '.woff2': 'font/woff2',
     '.xhtml': 'application/xhtml+xml',
+    '.xls': 'application/vnd.ms-excel',
+    '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     '.xml': 'application/xml',
-    '.zip': 'application/zip'
+    '.xul': 'application/vnd.mozilla.xul+xml',
+    '.zip': 'application/zip',
+    '.3gp': 'video/3gpp',  # Can also be audio/3gpp if no video file is present.
+    '.3g2': 'video/3gpp2',  # Can also be audio/3gpp2 if no video file is present.
+    '.7z': 'application/x-7z-compressed'
 }
 
 
