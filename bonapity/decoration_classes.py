@@ -4,9 +4,12 @@ to store and manage the decorated functions.
 
 @author: VieVie31
 """
+import json
 import typing
 
 from dataclasses import dataclass
+
+from .json_encode import BonapityJSONEncoder
 
 
 class DecoratedFunctions(object):
@@ -27,10 +30,11 @@ class BonapityDecoratedFunction():
     fun: typing.Callable
     timeout: int = 0
     mime_type: str = "auto"
+    json_encoder: json.JSONEncoder = BonapityJSONEncoder
 
 class BonapityException(Exception):
     """
-    Bonapity Exception, usefull for the `vuosi` decorator to differentiate 
+    Bonapity Exception, usefull for the `vuosi` decorator to differentiate
     exceptions from `bonapity` (server communication for example) from others.
     """
     pass

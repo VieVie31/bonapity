@@ -9,6 +9,7 @@ import typing
 
 from copy import deepcopy
 
+__all__ = ["BonapityJSONEncoder"]
 
 class NotRightType(Exception):
     pass
