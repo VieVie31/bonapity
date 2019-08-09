@@ -10,6 +10,7 @@ import functools
 
 from .server import ThreadingBonAppServer, BonAppServer
 from .decoration_classes import DecoratedFunctions, BonapityDecoratedFunction, BonapityException
+from .json_encode import BonapityJSONEncoder
 
 __all__ = ["bonapity", "vuosi"]
 
@@ -116,7 +117,10 @@ class BonAPIty:
         httpd.serve_forever()
 
     @staticmethod
-    def __new__(cls, fun=None, name: str = None, timeout: int = None, mime_type: str = "auto"):
+    def __new__(
+        cls, fun=None, name: str = None, 
+        timeout: int = None, mime_type: str = "auto", 
+        json_encoder: json.JSONEncoder = BonapityJSONEncoder):
         """
         Get a simple HTTP GET API with this simple decorator.
         You'll be able to use your function at :
@@ -134,12 +138,20 @@ class BonAPIty:
         :param timeout:
             timeout to kill the function
         :param mime_type:
-            specity your return mine-type if you want to return 
-            custom data such as binary images. If content-type 
+            specity your return mine-type if you want to return
+            custom data such as binary images. If content-type
             given, the function is assumed returning byte data.
-            If mine_type is set to "auto" (default) AND your 
+            If mine_type is set to "auto" (default) AND your
             function return type is `byte` we try to automatically
             detect the right mime type.
+        :param json_encoder:
+            the encoder to use when trying to serialize
+            the return type as json, the default `BonapityJSONEncoder`
+            is slower as it can handle more complex object than
+            the default encoder, you can change it by the default
+            `json.JSONEncoder` or your one encoder inheriting from it.
+            Remember, if the encoder can't encode the object into
+            a JSON format, the object returned will be pickled.
 
         Example:
         ```
@@ -167,7 +179,7 @@ class BonAPIty:
         fname = fun.__name__ if not name else name
         fname = f"{'' if fname[0] == '/' else '/'}{fname}"
         DecoratedFunctions.all[fname] = BonapityDecoratedFunction(
-            fun, timeout, mime_type)
+            fun, timeout, mime_type, json_encoder)
 
         @functools.wraps(fun)
         def f(*args, **kwargs):

@@ -72,17 +72,19 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         """
         parsed_url = urllib.parse.urlparse(self.path)
 
+        decorated_function = DecoratedFunctions.all[parsed_url.path]
+
         # Get the function in the decorated function list
-        fun = DecoratedFunctions.all[parsed_url.path].fun
+        fun = decorated_function.fun
         sig = inspect.signature(fun)
 
         # Get the timeout informatin of the function, is None set a default one
-        timeout = DecoratedFunctions.all[parsed_url.path].timeout
+        timeout = decorated_function.timeout
         if timeout is None:
             timeout = self.default_timeout
 
         # Get mime-type
-        mime_type = DecoratedFunctions.all[parsed_url.path].mime_type
+        mime_type = decorated_function.mime_type
 
         # Check if parameters names matches
         # (and ignore default and *args, **kargs parameters)
@@ -251,7 +253,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
 
             # Ecode result in JSON
             try:
-                res = json.dumps(res)
+                res = json.dumps(res, cls=decorated_function.json_encoder)
 
                 # Send success
                 send_header(self, 200, 'application/json')
