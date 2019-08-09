@@ -5,7 +5,7 @@ This module contains classes help full to generate html page programmatically.
 """
 from typing import List
 
-__all__ = ["make_html_index, make_html_function_doc"]
+__all__ = ["make_html_index", "make_html_function_doc"]
 
 class Tag:
     def __init__(self, *children, **attributes):
