@@ -7,6 +7,7 @@ import json
 import pickle
 import urllib
 import functools
+import contextvars
 
 from .server import ThreadingBonAppServer, BonAppServer
 from .decoration_classes import DecoratedFunctions, BonapityDecoratedFunction, BonapityException
@@ -61,7 +62,31 @@ def vuosi(domain: str, port: int):
     return inner_vuosi
 
 
-class BonAPIty:
+class MetaBonAPIty(type):
+    @property
+    def cookies(cls):
+        return cls._BonAPIty__cookies.get()
+
+class BonAPIty(object, metaclass=MetaBonAPIty):
+    # Each function will have access to the current client cookies
+    # with `BonAPIty.cookies.get()`. The content of the variable w'll be
+    # changed updated with the contextvars
+    __cookies = contextvars.ContextVar("bonapity.cookies")
+
+    @staticmethod
+    def __exec_function(f, cookies={}, session={}):
+        global bonapity
+        print("run")
+        print(cookies)
+        context = contextvars.copy_context()
+        print("context copied")
+        context.run(bonapity._BonAPIty__cookies.set, cookies)
+        print("cookies : sets")
+        print(f)
+        res = context.run(f)
+        print(res)
+        return res, context.get(bonapity.__cookies)
+
     @staticmethod
     def serve(port=8888, static_files_dir:str='./', index: str=None, help: bool = True, timeout: int = 10, verbose: bool = True):
         """
@@ -111,6 +136,8 @@ class BonAPIty:
         httpd.RequestHandlerClass.index = index
         httpd.RequestHandlerClass.help = help
         httpd.RequestHandlerClass.default_timeout = timeout
+
+        httpd.RequestHandlerClass.cookies_context = contextvars.copy_context()
         
 
         httpd.serve_forever()

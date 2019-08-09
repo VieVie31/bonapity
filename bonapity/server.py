@@ -12,12 +12,14 @@ import json
 import base64
 import pickle
 import http.server
+import http.cookies
 import urllib.parse
 import urllib.request
 import socketserver
 import os.path
 import threading
 import queue
+import contextvars
 
 from pathlib import Path
 from collections import defaultdict
@@ -27,7 +29,8 @@ from .decoration_classes import DecoratedFunctions
 from .mime import extension_to_mime, byte_to_mime
 
 
-def send_header(server_instance, code, content_type):
+def send_header(server_instance, code, content_type, cookies=None):
+    #TODO: send back cookies
     """
     This function is used by the BonAppServer to send back the headers.
 
@@ -50,6 +53,7 @@ def send_header(server_instance, code, content_type):
         'Access-Control-Allow-Methods',
         'GET, POST, PUT, DELETE, PATCH, OPTIONS'  # *?
     )
+    server_instance.send_header('Set-Cookie', "BONAPITY_TEST_COOKIE_1=23")
     server_instance.send_header("Access-Control-Allow-Credentials", 'true')
     server_instance.end_headers()
 
@@ -62,6 +66,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         self.default_timeout = 1
         self.static_files_dir = None
         self.index = None
+        self.bonapity = None
 
     def process(self, parameters, value_already_evaluated=False):
         """
@@ -69,6 +74,10 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
 
         :param parameters: key-value dict of parameters (values are not parsed)
         """
+        cookies = self.headers.get('Cookie')
+        cookies = http.cookies.SimpleCookie(cookies)
+        print("cookies", cookies)
+
         parsed_url = urllib.parse.urlparse(self.path)
 
         # Get the function in the decorated function list
@@ -196,6 +205,13 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             if full_arg_spec.varkw is not None and len(full_arg_spec.varkw):
                 f = functools.partial(f, **parameters[full_arg_spec.varkw])
 
+
+            # Prepare the function to be executed within a context
+            # Needed to resolve the contextvariables
+            orig_f = f # Copy in another name to avoid infinite recursion
+            f = lambda: self.bonapity._BonAPIty__exec_function(orig_f, cookies)
+            print("server f: ", f)
+
             if timeout > 0.:
                 que = queue.Queue()
                 thr = threading.Thread(target=lambda q: q.put(f()), args=(que,))
@@ -216,10 +232,14 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                     return
                 else:
                     # Get result from the top of the queue
-                    res = que.get()
+                    res, cookies = que.get()
             else:
                 # No timeout constraint
-                res = f()
+                res, cookies = f()
+            
+            #########################
+            #TODO: send back cookies#
+            #########################
 
             # If a mime-type is given, return as is (byte data assumed)
             if not mime_type in [None, "auto"]:
@@ -296,7 +316,6 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         # <!> : this method should not contain anything more and no return !
 
     def do_GET(self):
-
         parsed_url = urllib.parse.urlparse(self.path)
 
         # Extract domain, port from the client request (socket)
