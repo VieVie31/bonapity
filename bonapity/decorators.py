@@ -62,8 +62,24 @@ def vuosi(domain: str, port: int):
 
 
 class BonAPIty:
+    _singleton = None
+
+    def __new__(cls, fun=None, name: str = None, timeout: int = None, mime_type: str = "auto"):
+        cls.get_singleton()
+
+        return cls._singleton.new_function(fun, name, timeout, mime_type)
+
     @staticmethod
-    def serve(port=8888, static_files_dir: str = './', index: str = None, help: bool = True, timeout: int = 10, verbose: bool = True):
+    def get_singleton():
+        if BonAPIty._singleton is None:
+            BonAPIty._singleton = object.__new__(BonAPIty)
+        return BonAPIty._singleton
+
+    def __init__(self):
+        print("init")
+        self.server = None
+
+    def start_server(self, port=8888, static_files_dir: str = './', index: str = None, help: bool = True, timeout: int = 10, verbose: bool = True):
         """
         Serve your API forever.
 
@@ -95,6 +111,8 @@ class BonAPIty:
         Server running on  port : 8080
         ```
         """
+        if self.server is not None:
+            return
         PORT = port
         server_address = ("", PORT)
         handler = BonAppServer
@@ -113,9 +131,21 @@ class BonAPIty:
         httpd.RequestHandlerClass.default_timeout = timeout
 
         httpd.serve_forever()
+        self.server = httpd
 
     @staticmethod
-    def __new__(cls, fun=None, name: str = None, timeout: int = None, mime_type: str = "auto"):
+    def serve(port=8888, static_files_dir: str = './', index: str = None, help: bool = True, timeout: int = 10, verbose: bool = True):
+        BonAPIty.get_singleton().start_server(port, static_files_dir, index, help, timeout, verbose)
+
+    @staticmethod
+    def stop():
+        BonAPIty.get_singleton().stop_server()
+
+    def stop_server(self):
+        if self.server is not None:
+            self.server.shutdown()
+
+    def new_function(self, fun=None, name: str = None, timeout: int = None, mime_type: str = "auto"):
         """
         Get a simple HTTP GET API with this simple decorator.
         You'll be able to use your function at :
@@ -154,12 +184,12 @@ class BonAPIty:
         """
         if fun is None:
             return functools.partial(
-                BonAPIty.__new__, cls, name=name, timeout=timeout,
+                BonAPIty.__new__, BonAPIty, name=name, timeout=timeout,
                 mime_type=mime_type
             )
         elif type(fun) == str:
             return functools.partial(
-                BonAPIty.__new__, cls, name=fun, timeout=timeout,
+                BonAPIty.__new__, BonAPIty, name=fun, timeout=timeout,
                 mime_type=mime_type
             )
 
