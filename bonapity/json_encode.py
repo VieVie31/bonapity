@@ -30,7 +30,6 @@ class ObjectToJSONizable:
         ObjectToJSONizable.__all_transform_functions.append(fun)
         return fun
 
-    
     @staticmethod
     def resolve(obj):
         """
@@ -55,11 +54,13 @@ class ObjectToJSONizable:
                 out, stop_recurstion = transformation(obj)
                 if not type(out) in [type(None), bool, int, float, str, list, dict]:
                     out = NotRightType()
+                else:
+                    break
             except:
                 pass
 
         # No transform function succeedded to transform the object in dict
-        if type(out) == NotRightType:
+        if isinstance(out, NotRightType):
             raise NotRightType(f"Didn't succeed to JSON encode : {out}")
         else:
             # Try to encode it (for exemple numpy array may 
@@ -68,23 +69,24 @@ class ObjectToJSONizable:
                 out, stop_recurstion = transform_default_json_encoder(out)
             except:
                 pass
-        
         # If allowed to stop recursion, return result as is
         if stop_recurstion:
             return out
-        
-        # Continue to make each 
-        if type(out) == dict:
+
+        # Continue to make each
+        if isinstance(out, dict):
+            out = deepcopy(out)
             for k in out:
                 out[k] = ObjectToJSONizable.resolve(out[k])
             return out
-        elif type(out) == list:
-            for i in range(len(out)):
-                out[i] = ObjectToJSONizable.resolve(out[i])
+        elif isinstance(out, list):
+            for i, v in enumerate(out):
+                out[i] = ObjectToJSONizable.resolve(v)
             return out
         else:
             raise Exception(f"Type {type(out)} unexpected in resolve...")
 
+# The transformation should be declared in the right order...
 @ObjectToJSONizable
 def transform_default_json_encoder(obj) -> typing.Tuple[typing.Dict, bool]:
     """
@@ -97,18 +99,24 @@ def transform_default_json_encoder(obj) -> typing.Tuple[typing.Dict, bool]:
     return json.loads(json.dumps(obj)), True
 
 @ObjectToJSONizable
-def transform_numpy(ndarray) -> typing.Tuple[typing.List, bool]:
-    return ndarray.tolist(), False
-    
+def transform_python_dicts(_dict) -> typing.Tuple[typing.Dict, bool]:
+    _dict = deepcopy(_dict)
+    for k, v in _dict.items():
+        _dict[k] = ObjectToJSONizable.resolve(v)
+    return _dict, False 
+    #TODO: do same function for defaultdict, mappingproxy, lists, etc.
+
 @ObjectToJSONizable
 def transform_simple_object(obj) -> typing.Tuple[typing.Dict, bool]:
-    return obj.__dict__, False
+    return {**obj.__dict__}, False
 
+@ObjectToJSONizable
+def transform_numpy(ndarray) -> typing.Tuple[typing.List, bool]:
+    return ndarray.tolist(), False
 
 @ObjectToJSONizable
 def transform_python_sets(_set) -> typing.Tuple[typing.List, bool]:
-    return list(_set)
-
+    return list(_set), False
 
 #TODO: transform other generic types such as sets, dates
 # or complex ones such as plots
@@ -121,5 +129,8 @@ class BonapityJSONEncoder(json.JSONEncoder):
     ```
     """
     def default(self, obj):
-        return ObjectToJSONizable.resolve(obj)
+        print(obj)
+        a = ObjectToJSONizable.resolve(obj)
+        print(a)
+        return a
 
