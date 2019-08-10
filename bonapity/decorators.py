@@ -63,14 +63,14 @@ def vuosi(domain: str, port: int):
 
 class BonAPIty:
     @staticmethod
-    def serve(port=8888, static_files_dir:str='./', index: str=None, help: bool = True, timeout: int = 10, verbose: bool = True):
+    def serve(port=8888, static_files_dir: str = './', index: str = None, help: bool = True, timeout: int = 10, verbose: bool = True):
         """
         Serve your API forever.
 
         :param port:
             the port to serve the API
         :param static_files_dir:
-            root of the directory to serve as static files 
+            root of the directory to serve as static files
             (those files are served as GET only)
             prefer absolute path, less ambiguous (
                 else depend of the current position of python
@@ -106,12 +106,11 @@ class BonAPIty:
 
         httpd.RequestHandlerClass.bonapity = BonAPIty
         httpd.RequestHandlerClass.port = port
-        
+
         httpd.RequestHandlerClass.static_files_dir = static_files_dir
         httpd.RequestHandlerClass.index = index
         httpd.RequestHandlerClass.help = help
         httpd.RequestHandlerClass.default_timeout = timeout
-        
 
         httpd.serve_forever()
 
@@ -134,10 +133,10 @@ class BonAPIty:
         :param timeout:
             timeout to kill the function
         :param mime_type:
-            specity your return mine-type if you want to return 
-            custom data such as binary images. If content-type 
+            specity your return mine-type if you want to return
+            custom data such as binary images. If content-type
             given, the function is assumed returning byte data.
-            If mine_type is set to "auto" (default) AND your 
+            If mine_type is set to "auto" (default) AND your
             function return type is `byte` we try to automatically
             detect the right mime type.
 
@@ -155,7 +154,7 @@ class BonAPIty:
         """
         if fun is None:
             return functools.partial(
-                BonAPIty.__new__, cls, name=name, timeout=timeout, 
+                BonAPIty.__new__, cls, name=name, timeout=timeout,
                 mime_type=mime_type
             )
         elif type(fun) == str:

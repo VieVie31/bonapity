@@ -201,15 +201,15 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                 thr = threading.Thread(target=lambda q: q.put(f()), args=(que,))
                 thr.start()
                 thr.join(timeout)
-                
-                #TODO: differentiate timeout form function crash
+
+                # TODO: differentiate timeout form function crash
 
                 if que.empty():
                     # Time out error
                     send_header(self, 500, 'text/html')
                     self.wfile.write(
                         f"""Timeout error: execution of {fun.__name__}
-                        took more than the {timeout} allowed seconds 
+                        took more than the {timeout} allowed seconds
                         or function crashed... (see server logs)
                         """.encode()
                     )
@@ -222,7 +222,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                 res = f()
 
             # If a mime-type is given, return as is (byte data assumed)
-            if not mime_type in [None, "auto"]:
+            if mime_type not in [None, "auto"]:
                 # Check if data is in byte format
                 if type(res) != type(b''):
                     send_header(self, 500, 'text/html')
@@ -242,7 +242,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                     # Try to infer mine-type from 16 first bytes (enought)
                     # else return "application/octet-stream"
                     mime_type = byte_to_mime(res[:16])
-                    #raise NotImplementedError()
+                    # raise NotImplementedError()
                 # The data are bytes
                 send_header(self, 200, str(mime_type))
                 self.wfile.write(res)
@@ -314,13 +314,13 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                 send_header(self, 500, 'text/html')
                 self.wfile.write(
                     f"Error in serving index file {self.index}: {e}".encode())
-                return 
+                return
 
         # Check to display the js lib
         if self.help and parsed_url.path.startswith('/help/') and parsed_url.query in ['lib=js', 'js']:
             send_header(self, 200, 'text/javascript')
             self.wfile.write(generate_js_lib(domain, port).encode())
-            return 
+            return
         # Check if display help
         elif self.help and (parsed_url.path.startswith('/help/') or parsed_url.path in ['', '/']):
             fname = parsed_url.path[5:]
@@ -403,11 +403,11 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             self.wfile.write(html_out.encode())
             return
 
-        # If the function the user want to call do not exists 
+        # If the function the user want to call do not exists
         # check if a file exists from the root `static_files_dir`
         file_path = (Path(self.static_files_dir) / Path(parsed_url.path[1:])).absolute()
         if parsed_url.path not in DecoratedFunctions.all.keys() and os.path.isfile(file_path):
-            # Serve the file 
+            # Serve the file
             try:
                 with open(file_path, 'rb') as f:
                     mime_type = extension_to_mime(Path(file_path).suffix)

@@ -28,9 +28,10 @@ class BonapityDecoratedFunction():
     timeout: int = 0
     mime_type: str = "auto"
 
+
 class BonapityException(Exception):
     """
-    Bonapity Exception, usefull for the `vuosi` decorator to differentiate 
+    Bonapity Exception, usefull for the `vuosi` decorator to differentiate
     exceptions from `bonapity` (server communication for example) from others.
     """
     pass
