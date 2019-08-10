@@ -32,6 +32,7 @@ class BonapityDecoratedFunction():
     mime_type: str = "auto"
     json_encoder: json.JSONEncoder = BonapityJSONEncoder
 
+
 class BonapityException(Exception):
     """
     Bonapity Exception, usefull for the `vuosi` decorator to differentiate
