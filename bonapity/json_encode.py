@@ -107,6 +107,10 @@ def transform_python_dicts(_dict) -> typing.Tuple[typing.Dict, bool]:
     #TODO: do same function for defaultdict, mappingproxy, lists, etc.
 
 @ObjectToJSONizable
+def transform_get_object_state(obj) -> typing.Tuple[typing.Dict, bool]:
+    return obj.__getstate__(), False
+
+@ObjectToJSONizable
 def transform_simple_object(obj) -> typing.Tuple[typing.Dict, bool]:
     return {**obj.__dict__}, False
 
