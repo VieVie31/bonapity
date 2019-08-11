@@ -72,26 +72,9 @@ def generate_js_lib(domain: str, port: int, js_lib_name: str = "bonapity_api") -
 def generate_js(fname: str, pnames: List[str], domain: str, port: int) -> str:
     fname = fname[1:]  # remove the starting '/'
     return f"""
-    // Prefer include 'http://{domain}:{port}/help/?lib=js' in your project than C^C-C^V this code...
-    async function {fname}({', '.join(pnames)}) {{
-    \tkeys = [{', '.join(map(lambda x: f'"{x}"', pnames))}];
-    \tif (arguments.length > keys.length)
-    \t\tthrow new Exception('Too many arguments...');
-    \tparams = {{}};
-    \tfor (var i = 0; i < arguments.length; i++)
-    \t\tparams[keys[i]] = arguments[i];
-    \tparams = JSON.stringify(params);
-    \turl = 'http://{domain}:{port}/{fname}';
-    \tconst r = await fetch(url, {{
-    \t\tmethod: 'POST',
-    \t\theaders: {{
-    \t\t\t'Accept': 'application/json',
-    \t\t\t'Content-Type': 'application/json'
-    \t\t}},
-    \t\tbody: params
-    \t}});
-    \treturn await r.json();
-    }}""".replace("    ", '')
+    // Include 'http://{domain}:{port}/help/?lib=js' in your html header
+    // All wrapper functions are `async` and should be called with `await`
+    """
 
 
 def generate_python(fname: str, signature: str, doc: str, domain: str, port: int) -> str:

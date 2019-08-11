@@ -27,10 +27,10 @@ from collections import defaultdict
 from .code_generation import generate_js, generate_python, generate_js_lib
 from .decoration_classes import DecoratedFunctions
 from .mime import extension_to_mime, byte_to_mime
+from .html_generation import make_html_index, make_html_function_doc
 
 
 def send_header(server_instance, code, content_type, cookies=None):
-    #TODO: send back cookies
     """
     This function is used by the BonAppServer to send back the headers.
 
@@ -53,7 +53,16 @@ def send_header(server_instance, code, content_type, cookies=None):
         'Access-Control-Allow-Methods',
         'GET, POST, PUT, DELETE, PATCH, OPTIONS'  # *?
     )
-    server_instance.send_header('Set-Cookie', "BONAPITY_TEST_COOKIE_1=23")
+    print(cookies, type(cookies))
+    if cookies != None:
+        print("cookie not none", cookies.output(header=''))
+        #print(cookies.output(header='Set-Cookie:', sep='\n'))
+        #server_instance.send_header('Set-Cookie', cookies)#.output(header='', sep=''))
+        #FIXME: this send only 1 cookie (the first)
+        server_instance.send_header('Set-Cookie', cookies.output(header='', sep=';\r\nSet-Cookie: '))
+        #server_instance.end_headers()
+    #server_instance.send_header()
+    #"""
     server_instance.send_header("Access-Control-Allow-Credentials", 'true')
     server_instance.end_headers()
 
@@ -74,23 +83,27 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
 
         :param parameters: key-value dict of parameters (values are not parsed)
         """
+        print(self.headers)
         cookies = self.headers.get('Cookie')
+        print(cookies)
         cookies = http.cookies.SimpleCookie(cookies)
         print("cookies", cookies)
 
         parsed_url = urllib.parse.urlparse(self.path)
 
+        decorated_function = DecoratedFunctions.all[parsed_url.path]
+
         # Get the function in the decorated function list
-        fun = DecoratedFunctions.all[parsed_url.path].fun
+        fun = decorated_function.fun
         sig = inspect.signature(fun)
 
         # Get the timeout informatin of the function, is None set a default one
-        timeout = DecoratedFunctions.all[parsed_url.path].timeout
+        timeout = decorated_function.timeout
         if timeout is None:
             timeout = self.default_timeout
 
         # Get mime-type
-        mime_type = DecoratedFunctions.all[parsed_url.path].mime_type
+        mime_type = decorated_function.mime_type
 
         # Check if parameters names matches
         # (and ignore default and *args, **kargs parameters)
@@ -210,22 +223,21 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             # Needed to resolve the contextvariables
             orig_f = f # Copy in another name to avoid infinite recursion
             f = lambda: self.bonapity._BonAPIty__exec_function(orig_f, cookies)
-            print("server f: ", f)
 
             if timeout > 0.:
                 que = queue.Queue()
                 thr = threading.Thread(target=lambda q: q.put(f()), args=(que,))
                 thr.start()
                 thr.join(timeout)
-                
-                #TODO: differentiate timeout form function crash
+
+                # TODO: differentiate timeout form function crash
 
                 if que.empty():
                     # Time out error
                     send_header(self, 500, 'text/html')
                     self.wfile.write(
                         f"""Timeout error: execution of {fun.__name__}
-                        took more than the {timeout} allowed seconds 
+                        took more than the {timeout} allowed seconds
                         or function crashed... (see server logs)
                         """.encode()
                     )
@@ -242,7 +254,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             #########################
 
             # If a mime-type is given, return as is (byte data assumed)
-            if not mime_type in [None, "auto"]:
+            if mime_type not in [None, "auto"]:
                 # Check if data is in byte format
                 if type(res) != type(b''):
                     send_header(self, 500, 'text/html')
@@ -250,7 +262,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                         f"{fun.__name__} didn't returned byte data but :{str(res)[:100]}...".encode())
                     return
                 # The data are bytes
-                send_header(self, 200, str(mime_type))
+                send_header(self, 200, str(mime_type), cookies=cookies)
                 self.wfile.write(res)
                 return
             elif mime_type in [None, "auto"] and type(res) == type(b''):
@@ -262,18 +274,18 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                     # Try to infer mine-type from 16 first bytes (enought)
                     # else return "application/octet-stream"
                     mime_type = byte_to_mime(res[:16])
-                    #raise NotImplementedError()
+                    # raise NotImplementedError()
                 # The data are bytes
-                send_header(self, 200, str(mime_type))
+                send_header(self, 200, str(mime_type), cookies=cookies)
                 self.wfile.write(res)
                 return
 
             # Ecode result in JSON
             try:
-                res = json.dumps(res)
+                res = json.dumps(res, cls=decorated_function.json_encoder)
 
                 # Send success
-                send_header(self, 200, 'application/json')
+                send_header(self, 200, 'application/json', cookies=cookies)
                 self.wfile.write(
                     f"{res}".encode()
                 )
@@ -284,7 +296,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                     res = pickle.dumps(res)
 
                     # Send success
-                    send_header(self, 200, 'application/python-pickle')
+                    send_header(self, 200, 'application/python-pickle', cookies=cookies)
                     self.wfile.write(res)
                     return
                 except Exception as nested_e:
@@ -333,13 +345,13 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                 send_header(self, 500, 'text/html')
                 self.wfile.write(
                     f"Error in serving index file {self.index}: {e}".encode())
-                return 
+                return
 
         # Check to display the js lib
         if self.help and parsed_url.path.startswith('/help/') and parsed_url.query in ['lib=js', 'js']:
             send_header(self, 200, 'text/javascript')
             self.wfile.write(generate_js_lib(domain, port).encode())
-            return 
+            return
         # Check if display help
         elif self.help and (parsed_url.path.startswith('/help/') or parsed_url.path in ['', '/']):
             fname = parsed_url.path[5:]
@@ -351,28 +363,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
                     modules[DecoratedFunctions.all[fname].fun.__module__].append(
                         fname)
 
-                html_out = f"""
-                    <h1>Index of functions available in the API</h1><hr>
-                    {''.join([
-                    f'''
-                            <h2>{m}</h2>
-                            <u>
-                                {
-                    ''.join([
-                        f'<li><a href="/help{f}">{f}</a></li>'
-                        for f in modules[m]
-                    ])
-                    }
-                            </ul>
-                            <hr>
-                        '''
-                    for m in modules
-                ])}
-                    <div style="position:absolute;bottom:5;right:5;">
-                    <hr><footer>Auto generated by
-                    ★ <a href='https://github.com/VieVie31/bonapity'>bonAPIty</a> ★
-                    </footer></div>
-                """
+                html_out = make_html_index(modules)
 
                 send_header(self, 200, 'text/html')
                 self.wfile.write(html_out.encode())
@@ -390,43 +381,22 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             fun = DecoratedFunctions.all[fname].fun
             sig = html.escape(f"{fun.__name__}{inspect.signature(fun)}")
             doc = html.escape(fun.__doc__) if fun.__doc__ else ''
-            html_out = f"""
-                <h1>Documentation for : {fname}</h1>
-                <div><h2>Signature :</h2><br/> <i><tt>{sig}</tt></i></div><hr>
-                <div><h2>Description : </h2><code style='display:block;white-space:pre-wrap'>{doc}</code></div><hr>
-                <div>
-                    <h2>Generated Code</h2>
-                    Code auto-generated to use as template for client if
-                    you don't want to code the exchanges yourserlf...
-                    <details>
-                        <summary><h3>Python Client</h3></summary>
-                        <i><code style='display:block;white-space:pre-wrap'>{
-            generate_python(fname, sig, doc, domain, port)
-            }</code></i>
-                        <br/>Remeber, all arguments are now nammed...
-                    </details>
-                    <details>
-                        <summary><h3>Javascrit</h3></summary>
-                        <i><code style='display:block;white-space:pre-wrap'>{
-            generate_js(fname, list(inspect.signature(fun).parameters.keys()), domain, port)
-            }</code></i>
-                        <br/>Remember to use <tt>await</tt>...
-                    </details>
-                </div>
-                <div style="position:absolute;bottom:5;right:5;">
-                <hr><footer>Auto generated by
-                ★ <a href='https://github.com/VieVie31/bonapity'>bonAPIty</a> ★
-                </footer></div>
-            """
+
+            html_out = make_html_function_doc(
+                fname, sig, doc, 
+                generate_python(fname, sig, doc, domain, port), 
+                generate_js(fname, list(inspect.signature(fun).parameters.keys()), domain, port)
+            )
+
             send_header(self, 200, 'text/html')
             self.wfile.write(html_out.encode())
             return
 
-        # If the function the user want to call do not exists 
+        # If the function the user want to call do not exists
         # check if a file exists from the root `static_files_dir`
         file_path = (Path(self.static_files_dir) / Path(parsed_url.path[1:])).absolute()
         if parsed_url.path not in DecoratedFunctions.all.keys() and os.path.isfile(file_path):
-            # Serve the file 
+            # Serve the file
             try:
                 with open(file_path, 'rb') as f:
                     mime_type = extension_to_mime(Path(file_path).suffix)
