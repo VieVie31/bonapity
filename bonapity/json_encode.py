@@ -133,8 +133,7 @@ class BonapityJSONEncoder(json.JSONEncoder):
     ```
     """
     def default(self, obj):
-        print(obj)
-        a = ObjectToJSONizable.resolve(obj)
-        print(a)
-        return a
+        return ObjectToJSONizable.resolve(obj)
+
+
 
