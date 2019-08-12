@@ -22,16 +22,17 @@ import queue
 import contextvars
 
 from pathlib import Path
+from copy import deepcopy
 from collections import defaultdict
 
 from .code_generation import generate_js, generate_python, generate_js_lib
 from .decoration_classes import DecoratedFunctions
 from .mime import extension_to_mime, byte_to_mime
 from .html_generation import make_html_index, make_html_function_doc
-from .session import SessionManager, get_session_id
+from .session import SessionManager, make_session_id
 
 
-def send_header(server_instance, code, content_type, cookies=None):
+def send_header(server_instance, code, content_type, cookies=None):#, session_id=None):
     """
     This function is used by the BonAppServer to send back the headers.
 
@@ -59,8 +60,10 @@ def send_header(server_instance, code, content_type, cookies=None):
     if cookies != None:
         server_instance.send_header('Set-Cookie', cookies.output(header='', sep=';\r\nSet-Cookie: '))
 
+    session_id = server_instance.get_cookies_and_session_id()[1]
+
     server_instance.send_header("Access-Control-Allow-Credentials", 'true')
-    server_instance.send_header('Set-Cookie', f'BONAPITYSID={get_session_id(server_instance)}')
+    server_instance.send_header('Set-Cookie', f'BONAPITYSID={session_id if session_id else make_session_id()}')
     server_instance.end_headers()
 
 
@@ -74,17 +77,30 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         self.index = None
         self.bonapity = None
 
+    def get_cookies_and_session_id(self):
+        cookies = self.headers.get('Cookie')
+        cookies = http.cookies.SimpleCookie(cookies)
+        cookies = deepcopy(cookies)
+
+        # BONAPITYSID is the reserved cookie name for sessions
+        if "BONAPITYSID" in cookies:
+            # Get the session id
+            session_id = cookies["BONAPITYSID"].value
+            # Do not allow modification of the cookie session, pop it
+            cookies.pop("BONAPITYSID")
+        else:
+            session_id = make_session_id()
+        return cookies, session_id
+
     def process(self, parameters, value_already_evaluated=False):
         """
         This method do the common stuffs between do_GET and do_POST.
 
         :param parameters: key-value dict of parameters (values are not parsed)
         """
-        print(self.headers)
-        cookies = self.headers.get('Cookie')
-        print(cookies)
-        cookies = http.cookies.SimpleCookie(cookies)
-        print("cookies", cookies)
+        cookies, session_id = self.get_cookies_and_session_id()
+        # Get the session
+        session = SessionManager()[session_id]
 
         parsed_url = urllib.parse.urlparse(self.path)
 
@@ -219,7 +235,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             # Prepare the function to be executed within a context
             # Needed to resolve the contextvariables
             orig_f = f # Copy in another name to avoid infinite recursion
-            f = lambda: self.bonapity._BonAPIty__exec_function(orig_f, cookies)
+            f = lambda: self.bonapity._BonAPIty__exec_function(orig_f, cookies, session)
 
             if timeout > 0.:
                 que = queue.Queue()

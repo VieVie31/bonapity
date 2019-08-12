@@ -14,8 +14,8 @@ from http.cookies import SimpleCookie
 
 class UserSession:
     """
-    User session have similar to dict as they support 
-    __setitem__ and __getitem___, but they also keep track of the timestamp 
+    User session have similar to dict as they support
+    __setitem__ and __getitem___, but they also keep track of the timestamp
     of the last modifiction done via getter and setters.
     """
     def __init__(self):
@@ -64,13 +64,13 @@ class Singleton(type):
         return cls._instances[cls]
 
 class SessionManager(metaclass=Singleton):
-    def __init__(self, session_timeout: int=10):
+    def __init__(self, session_timeout: int=600): #10min of inactivity before timeout
         """
         Create a session manager if not already existing.
         There is only one session manager instancied as this is a singleton.
 
         :param session_timeout:
-            the session content of a specific user will be deleted 
+            the session content of a specific user will be deleted
             after this number of second of inactivity (not using the session)
         """
         #raise NotImplementedError()
@@ -115,17 +115,4 @@ def make_session_id() -> str:
         (f'{time.time()}' + f'{random.randint(0, 1000)}').encode()
     ).hexdigest()
 
-def get_session_id(server_instance) -> str:
-    """
-    If the `SESSIONID` is present in a cookie in the header, return it
-    else return a new one `with make_session_id`.
-
-    :param server_instance: the server instance where to find cookies
-    """
-    cookies = SimpleCookie(server_instance.headers.get('Cookie', failobj=''))
-    return (
-        cookies["BONAPITYSID"].value 
-        if "BONAPITYSID" in cookies 
-        else make_session_id()
-    )
 

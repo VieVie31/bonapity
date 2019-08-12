@@ -8,6 +8,7 @@ import pickle
 import urllib
 import functools
 import contextvars
+import http.cookies
 
 from .server import ThreadingBonAppServer, BonAppServer
 from .decoration_classes import DecoratedFunctions, BonapityDecoratedFunction, BonapityException
@@ -67,18 +68,24 @@ class MetaBonAPIty(type):
     @property
     def cookies(cls):
         return cls._BonAPIty__cookies.get()
+    
+    @property
+    def session(cls):
+        return cls._BonAPIty__session.get()
 
 class BonAPIty(object, metaclass=MetaBonAPIty):
     # Each function will have access to the current client cookies
     # with `BonAPIty.cookies.get()`. The content of the variable w'll be
     # changed updated with the contextvars
     __cookies = contextvars.ContextVar("bonapity.cookies")
+    __session = contextvars.ContextVar("bonapity.session")
 
     @staticmethod
-    def __exec_function(f, cookies={}, session={}):
+    def __exec_function(f, cookies=http.cookies.SimpleCookie(), session={}):
         global bonapity
         context = contextvars.copy_context()
         context.run(bonapity._BonAPIty__cookies.set, cookies)
+        context.run(bonapity._BonAPIty__session.set, session)
         res = context.run(f)
         return res, context.get(bonapity.__cookies)
 
