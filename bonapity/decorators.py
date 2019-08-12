@@ -77,15 +77,9 @@ class BonAPIty(object, metaclass=MetaBonAPIty):
     @staticmethod
     def __exec_function(f, cookies={}, session={}):
         global bonapity
-        print("run")
-        print(cookies)
         context = contextvars.copy_context()
-        print("context copied")
         context.run(bonapity._BonAPIty__cookies.set, cookies)
-        print("cookies : sets")
-        print(f)
         res = context.run(f)
-        print(res)
         return res, context.get(bonapity.__cookies)
 
     @staticmethod

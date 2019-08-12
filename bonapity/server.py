@@ -53,16 +53,11 @@ def send_header(server_instance, code, content_type, cookies=None):
         'Access-Control-Allow-Methods',
         'GET, POST, PUT, DELETE, PATCH, OPTIONS'  # *?
     )
-    print(cookies, type(cookies))
+
+    # Send regular cookies
     if cookies != None:
-        print("cookie not none", cookies.output(header=''))
-        #print(cookies.output(header='Set-Cookie:', sep='\n'))
-        #server_instance.send_header('Set-Cookie', cookies)#.output(header='', sep=''))
-        #FIXME: this send only 1 cookie (the first)
         server_instance.send_header('Set-Cookie', cookies.output(header='', sep=';\r\nSet-Cookie: '))
-        #server_instance.end_headers()
-    #server_instance.send_header()
-    #"""
+
     server_instance.send_header("Access-Control-Allow-Credentials", 'true')
     server_instance.end_headers()
 
@@ -248,10 +243,6 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             else:
                 # No timeout constraint
                 res, cookies = f()
-            
-            #########################
-            #TODO: send back cookies#
-            #########################
 
             # If a mime-type is given, return as is (byte data assumed)
             if mime_type not in [None, "auto"]:
