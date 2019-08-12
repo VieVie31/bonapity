@@ -28,6 +28,7 @@ from .code_generation import generate_js, generate_python, generate_js_lib
 from .decoration_classes import DecoratedFunctions
 from .mime import extension_to_mime, byte_to_mime
 from .html_generation import make_html_index, make_html_function_doc
+from .session import SessionManager, get_session_id
 
 
 def send_header(server_instance, code, content_type, cookies=None):
@@ -59,6 +60,7 @@ def send_header(server_instance, code, content_type, cookies=None):
         server_instance.send_header('Set-Cookie', cookies.output(header='', sep=';\r\nSet-Cookie: '))
 
     server_instance.send_header("Access-Control-Allow-Credentials", 'true')
+    server_instance.send_header('Set-Cookie', f'BONAPITYSID={get_session_id(server_instance)}')
     server_instance.end_headers()
 
 
