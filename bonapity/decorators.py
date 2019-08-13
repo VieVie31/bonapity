@@ -13,6 +13,7 @@ import http.cookies
 from .server import ThreadingBonAppServer, BonAppServer
 from .decoration_classes import DecoratedFunctions, BonapityDecoratedFunction, BonapityException
 from .json_encode import BonapityJSONEncoder
+from .session import SessionManager
 
 __all__ = ["bonapity", "vuosi"]
 
@@ -90,7 +91,10 @@ class BonAPIty(object, metaclass=MetaBonAPIty):
         return res, context.get(bonapity.__cookies)
 
     @staticmethod
-    def serve(port=8888, static_files_dir: str = './', index: str = None, help: bool = True, timeout: int = 10, verbose: bool = True):
+    def serve(
+        port=8888, static_files_dir: str = './', index: str = None, 
+        help: bool = True, timeout: int = 10, session_timeout: int = 600, 
+        verbose: bool = True):
         """
         Serve your API forever.
 
@@ -122,6 +126,8 @@ class BonAPIty(object, metaclass=MetaBonAPIty):
         Server running on  port : 8080
         ```
         """
+        SessionManager.session_timeout = session_timeout
+
         PORT = port
         server_address = ("", PORT)
         handler = BonAppServer

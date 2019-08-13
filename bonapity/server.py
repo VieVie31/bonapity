@@ -224,11 +224,14 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             )
 
             # Fill the *args if any
-            if full_arg_spec.varargs is not None and len(full_arg_spec.varargs):
+            if full_arg_spec.varargs is not None \
+                and len(full_arg_spec.varargs):
                 f = functools.partial(f, *parameters[full_arg_spec.varargs])
 
             # Fill the **kargs if any
-            if full_arg_spec.varkw is not None and len(full_arg_spec.varkw):
+            if full_arg_spec.varkw is not None \
+                    and isinstance(parameters[full_arg_spec.varkw], dict) \
+                    and len(full_arg_spec.varkw):
                 f = functools.partial(f, **parameters[full_arg_spec.varkw])
 
 

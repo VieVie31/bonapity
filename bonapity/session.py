@@ -64,6 +64,7 @@ class Singleton(type):
         return cls._instances[cls]
 
 class SessionManager(metaclass=Singleton):
+    session_timeout = 600
     def __init__(self, session_timeout: int=600): #10min of inactivity before timeout
         """
         Create a session manager if not already existing.
@@ -74,13 +75,13 @@ class SessionManager(metaclass=Singleton):
             after this number of second of inactivity (not using the session)
         """
         #raise NotImplementedError()
-        self.session_timeout = session_timeout
+        SessionManager.session_timeout= session_timeout
         # `self.session` will contain for each SESSIONID as key a dict 
         # of the stored session data, aslo if the SESSIONID was not registered
         # the default dict corresponding to an emtpy session is {}
         self.sessions = defaultdict(UserSession) #(UserSession look like dict)
         # Create the thread doing the session garbage collector task
-        threading.Timer(self.session_timeout, self.__clean_timedout_session).start()
+        threading.Timer(SessionManager.session_timeout, self.__clean_timedout_session).start()
 
     def __getitem__(self, sessionid) -> UserSession:
         return self.sessions[sessionid]
@@ -102,7 +103,7 @@ class SessionManager(metaclass=Singleton):
         ).start()
         # Delete if timeout or empty
         for sessionid in list(self.sessions.keys()):
-            if time.time() - self.sessions[sessionid].last_timestamp > self.session_timeout \
+            if time.time() - self.sessions[sessionid].last_timestamp > SessionManager.session_timeout \
                   or len(self.sessions[sessionid].storage) == 0:
                 del self.sessions[sessionid]
     
