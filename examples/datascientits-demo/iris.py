@@ -28,15 +28,17 @@ class MyRFModel:
 
         :param nb_tree: number of trees in the RF (default 10)
         """
-        MyRFModel.clf = RandomForestClassifier(nb_tree).fit(
+        model = RandomForestClassifier(nb_tree).fit(
             IrisDataset.x_train, IrisDataset.y_train)
+        bonapity.session["user_model"] = model
 
     @bonapity
     def model_acc() -> float:
         """
         Know the model accuracy on the test base.
         """
-        return (MyRFModel.clf.predict(IrisDataset.x_test) == IrisDataset.y_test).mean()
+        model = bonapity.session["user_model"] if "user_model" in bonapity.session else MyRFModel.clf
+        return (model.predict(IrisDataset.x_test) == IrisDataset.y_test).mean()
 
     @bonapity
     def predict_one_sample(
@@ -45,7 +47,8 @@ class MyRFModel:
         """
         Predict the class of a given class
         """
-        pred = MyRFModel.clf.predict([[
+        model = model = bonapity.session["user_model"] if "user_model" in bonapity.session else MyRFModel.clf
+        pred = model.predict([[
             sepal_length, sepal_width, petal_length, petal_width
         ]])[0]
         # Cast from numpy to int
