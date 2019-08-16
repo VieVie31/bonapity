@@ -202,12 +202,12 @@ class BonAPIty(object, metaclass=MetaBonAPIty):
         if fun is None:
             return functools.partial(
                 BonAPIty.__new__, cls, name=name, timeout=timeout,
-                mime_type=mime_type
+                mime_type=mime_type, json_encoder=json_encoder
             )
         elif type(fun) == str:
             return functools.partial(
                 BonAPIty.__new__, cls, name=fun, timeout=timeout,
-                mime_type=mime_type
+                mime_type=mime_type, json_encoder=json_encoder
             )
 
         fname = fun.__name__ if not name else name
