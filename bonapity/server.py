@@ -339,94 +339,81 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         # <!> : this method should not contain anything more and no return !
 
-    def do_GET(self):
-        parsed_url = urllib.parse.urlparse(self.path)
-
-        # Extract domain, port from the client request (socket)
-        domain, port = self.request.getsockname()
-
-        # Serve the index page if exists else display an error
-        if self.index and parsed_url.path in ['', '/']:
-            try:
-                # self.index is assumed to be an html file
-                with open(self.index, 'rb') as f:
-                    send_header(self, 200, 'text/html')
-                    self.wfile.write(f.read())
-                    return
-            except Exception as e:
-                send_header(self, 500, 'text/html')
-                self.wfile.write(
-                    f"Error in serving index file {self.index}: {e}".encode())
+    def __return_file(self, file_path, mime_type: str = None):
+        """Serve a given file from a `path_file` and
+        detect `mime_type` if not provided
+        """
+        # Serve the file
+        try:
+            with open(file_path, 'rb') as f:
+                data = f.read()
+                if mime_type is None: 
+                    # Detect mime_type if `None`
+                    mime_type = extension_to_mime(Path(file_path).suffix)
+                    if mime_type == 'application/octet-stream':
+                        # Try to determine mime from 16 first bytes
+                        mime_type = byte_to_mime(data[:16])
+                send_header(self, 200, mime_type)
+                self.wfile.write(data)
                 return
-
-        # Check to display the js lib
-        if self.help and parsed_url.path.startswith('/help/') and parsed_url.query in ['lib=js', 'js']:
-            send_header(self, 200, 'text/javascript')
-            self.wfile.write(generate_js_lib(domain, port).encode())
+        except Exception as e:
+            send_header(self, 500, 'text/html')
+            self.wfile.write(
+                f"Error in serving file {file_path}: {e}".encode())
             return
-        # Check if display help
-        elif self.help and (parsed_url.path.startswith('/help/') or parsed_url.path in ['', '/']):
-            fname = parsed_url.path[5:]
 
-            # If no name given, make an index of all functions allowed in the API
-            if fname in ['', '/', '/*']:
-                modules = defaultdict(list)
-                for fname in DecoratedFunctions.all.keys():
-                    modules[DecoratedFunctions.all[fname].fun.__module__].append(
-                        fname)
+    def __return_help_page(self, parsed_url):
+        "Return an html help index page or the help of a given function"
+        fname = parsed_url.path[5:]
 
-                html_out = make_html_index(modules)
+        # If no name given, make an index of all functions allowed in the API
+        if fname in ['', '/', '/*']:
+            modules = defaultdict(list)
+            for fname in DecoratedFunctions.all.keys():
+                modules[DecoratedFunctions.all[fname].fun.__module__].append(fname)
 
-                send_header(self, 200, 'text/html')
-                self.wfile.write(html_out.encode())
-                return
-            elif not self.help and parsed_url.path == '/':
-                send_header(self, 404, 'text/html')
-                self.wfile.write(b'')
-                return
-
-            if fname not in DecoratedFunctions.all.keys():
-                send_header(self, 404, 'text/html')
-                self.wfile.write(
-                    f"{fname} : this function do not exists...".encode())
-                return
-            fun = DecoratedFunctions.all[fname].fun
-            sig = html.escape(f"{fun.__name__}{inspect.signature(fun)}")
-            doc = html.escape(fun.__doc__) if fun.__doc__ else ''
-
-            html_out = make_html_function_doc(
-                fname, sig, doc, 
-                generate_python(fname, sig, doc, domain, port), 
-                generate_js(fname, list(inspect.signature(fun).parameters.keys()), domain, port)
-            )
+            html_out = make_html_index(modules)
 
             send_header(self, 200, 'text/html')
             self.wfile.write(html_out.encode())
             return
-
-        # If the function the user want to call do not exists
-        # check if a file exists from the root `static_files_dir`
-        file_path = (Path(self.static_files_dir) / Path(parsed_url.path[1:])).absolute()
-        if parsed_url.path not in DecoratedFunctions.all.keys() and os.path.isfile(file_path):
-            # Serve the file
-            try:
-                with open(file_path, 'rb') as f:
-                    mime_type = extension_to_mime(Path(file_path).suffix)
-                    send_header(self, 200, mime_type)
-                    self.wfile.write(f.read())
-                    return
-            except Exception as e:
-                send_header(self, 500, 'text/html')
-                self.wfile.write(
-                    f"Error in serving file {file_path}: {e}".encode())
-                return
-        elif parsed_url.path not in DecoratedFunctions.all.keys():
+        elif not self.help and parsed_url.path == '/':
             send_header(self, 404, 'text/html')
-            self.wfile.write(
-                f"{parsed_url.path} : this function do not exists...".encode())
+            self.wfile.write(b'')
             return
 
-        # Will be replaced by True id data loaded from pickle
+        #FIXME: to allow regex
+        elif fname not in DecoratedFunctions.all.keys():
+            send_header(self, 404, 'text/html')
+            self.wfile.write(
+                f"{fname} : this function do not exists...".encode())
+            return
+        fun = DecoratedFunctions.all[fname].fun
+        sig = html.escape(f"{fun.__name__}{inspect.signature(fun)}")
+        doc = html.escape(fun.__doc__) if fun.__doc__ else ''
+
+        # Extract domain, port from the client request (socket)
+        domain, port = self.request.getsockname()
+
+        html_out = make_html_function_doc(
+            fname, sig, doc, 
+            generate_python(fname, sig, doc, domain, port), 
+            generate_js(fname, list(inspect.signature(fun).parameters.keys()), domain, port)
+        )
+
+        send_header(self, 200, 'text/html')
+        self.wfile.write(html_out.encode())
+        return
+    
+    def __extract_parameters_from_url(self, parsed_url):
+        """Return the parameters extracted from the `parsed_url`
+        as urlargs or base64 pickle and return a boolean indicating
+        if the variables have been evaluated (True for pickle).
+        This should be passed to the process method.
+
+        :return: parameters as dict, boolean
+        """
+        # Will be replaced by True if data loaded from pickle
         value_already_evaluated = False
 
         urlargs = parsed_url.query.split('&')
@@ -436,7 +423,7 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             try:
                 parameters = base64.b64decode(urlargs[0])
                 parameters = pickle.loads(parameters)
-                if type(parameters) != dict or set(map(lambda k: type(k), parameters)) != {str}:
+                if type(parameters) != dict or set(map(type, parameters)) != {str}:
                     send_header(self, 500, 'text/html')
                     self.wfile.write(
                         b"""
@@ -459,6 +446,42 @@ class BonAppServer(http.server.BaseHTTPRequestHandler):
             parameters = urllib.parse.parse_qs(
                 parsed_url.query
             )
+
+        return parameters, value_already_evaluated
+
+    def do_GET(self):
+        parsed_url = urllib.parse.urlparse(self.path)
+
+        # Serve the index page if exists else display an error
+        if self.index and parsed_url.path in ['', '/']:
+            self.__return_file(self.index, 'text/html')
+            return
+        # Check to display the js lib
+        elif self.help and parsed_url.path.startswith('/help/') and parsed_url.query in ['lib=js', 'js']:
+            send_header(self, 200, 'text/javascript')
+            self.wfile.write(generate_js_lib(*self.request.getsockname()).encode())
+            return
+        # Check if display help
+        elif self.help and (parsed_url.path.startswith('/help/') or parsed_url.path in ['', '/']):
+            self.__return_help_page(parsed_url)
+            return
+
+        # If the function the user want to call do not exists
+        # check if a file exists from the root `static_files_dir`
+        #TODO: split the `?` and `#` ?
+        file_path = (Path(self.static_files_dir) / Path(parsed_url.path[1:])).absolute()
+        if parsed_url.path not in DecoratedFunctions.all.keys() and os.path.isfile(file_path):
+            self.__return_file(file_path)
+            return
+
+        #FIXME: to allow regex
+        elif parsed_url.path not in DecoratedFunctions.all.keys():
+            send_header(self, 404, 'text/html')
+            self.wfile.write(
+                f"{parsed_url.path} : this function do not exists...".encode())
+            return
+
+        parameters, value_already_evaluated = self.__extract_parameters_from_url(parsed_url)
 
         self.process(parameters, value_already_evaluated)
         return
