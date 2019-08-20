@@ -51,9 +51,7 @@ class MyRFModel:
         pred = model.predict([[
             sepal_length, sepal_width, petal_length, petal_width
         ]])[0]
-        # Cast from numpy to int
-        # because numpy numerical are not JSON serializabe
-        return pred.tolist()
+        return pred
 
 if __name__ == "__main__":
     bonapity.serve(index="iris.html")
