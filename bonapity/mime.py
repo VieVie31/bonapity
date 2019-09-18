@@ -118,7 +118,7 @@ def byte_to_mime(byte_data: bytes) -> str:
     # Check in decreasing order of the magic number
     # byte length the potential application
 
-    if byte_data[:14] == b"<!DOCTYPE html":
+    if byte_data[:14] in [b"<!DOCTYPE html", b"<!doctype html"]:
         return 'text/html'
         
     if byte_data[:11] == b'd8:announce':
