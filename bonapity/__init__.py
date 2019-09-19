@@ -6,7 +6,7 @@ See documentation with : `help(bonapity)`.
 """
 from .decorators import bonapity, vuosi
 
-__version_info__ = (0, 1, 19)
+__version_info__ = (0, 1, 20)
 __version__ = '.'.join(map(str, __version_info__))
 __author__ = "Olivier RISSER-MAROIX (VieVie31)\nAdrien POUYET (Ricocotam)"
 
