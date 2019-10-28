@@ -1,0 +1,37 @@
+<html>
+    <header>
+        <title>Face Detection</title>
+        <script src="http://localhost:1234/help/?js"></script>
+    </header>
+    <body>
+        <input type='file' accept='image/*' onchange='openFile(event)'><br>
+        <img id='output' style="height:128px; width:128px;">
+        <img id='output2' style="height:128px; width:128px;">
+        <button onclick="sendImage()">Submit !</button>
+        <script>
+            var img_data = null;
+            function openFile(file) {
+                var input = file.target;
+                
+                var reader = new FileReader();
+                reader.onload = function() {
+                    var dataURL = reader.result;
+                    var output = document.getElementById('output');
+                    output.src = dataURL;
+                    img_data = dataURL;
+                }
+
+                reader.readAsDataURL(input.files[0]);
+            };
+
+            async function sendImage() {
+                if (img_data === null) 
+                    return alert("No Image Loaded… :/")
+                
+                var base64_img = (await bonapity_api.process_face(img_data));
+                console.log(base64_img)
+                document.getElementById('output2').src = base64_img;
+            }
+        </script>
+    </body>
+</html>
